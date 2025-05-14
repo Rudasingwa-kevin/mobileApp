@@ -1,0 +1,182 @@
+{
+  "common": {
+    "welcome": "Bienvenue",
+    "search": "Rechercher",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "finish": "Terminer",
+    "create": "Créer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "back": "Retour",
+    "confirm": "Confirmer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "new": "Nouveau"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "forgotPassword": "Mot de passe oublié ?",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "fullName": "Nom complet",
+    "continueWith": "Continuer avec",
+    "phoneNumber": "Numéro de téléphone",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "dontHaveAccount": "Vous n'avez pas de compte ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "resetPasswordInstructions": "Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe"
+  },
+  "preferences": {
+    "title": "Préférences",
+    "language": "Langue",
+    "currency": "Devise",
+    "notifications": "Notifications",
+    "darkMode": "Mode sombre",
+    "chooseLanguage": "Choisissez votre langue",
+    "languageDescription": "Sélectionnez la langue que vous préférez utiliser dans l'application",
+    "chooseCurrency": "Choisissez votre devise",
+    "currencyDescription": "Les prix seront affichés dans cette devise par défaut",
+    "notificationsDescription": "Recevez des alertes sur les nouveaux logements et promotions",
+    "enableNotifications": "Activer les notifications",
+    "receiveNotifications": "Recevoir des notifications"
+  },
+  "languages": {
+    "fr": "Français",
+    "en": "Anglais",
+    "rw": "Kinyarwanda",
+    "sw": "Swahili"
+  },
+  "currencies": {
+    "RWF": "Franc Rwandais (RWF)",
+    "USD": "Dollar Américain (USD)",
+    "EUR": "Euro (EUR)"
+  },
+  "property": {
+    "price": "Prix",
+    "location": "Emplacement",
+    "bedrooms": "Chambres",
+    "bathrooms": "Salles de bain",
+    "area": "Superficie",
+    "amenities": "Équipements",
+    "description": "Description",
+    "contactOwner": "Contacter le propriétaire",
+    "seeMore": "Voir plus",
+    "addToFavorites": "Ajouter aux favoris",
+    "removeFromFavorites": "Retirer des favoris",
+    "share": "Partager",
+    "perMonth": "par mois",
+    "perNight": "par nuit",
+    "available": "Disponible",
+    "unavailable": "Indisponible",
+    "noResults": "Aucun résultat",
+    "type": "Type de logement",
+    "types": {
+      "apartment": "Appartement",
+      "house": "Maison",
+      "villa": "Villa",
+      "studio": "Studio",
+      "room": "Chambre"
+    }
+  },
+  "profile": {
+    "myProfile": "Mon profil",
+    "editProfile": "Modifier le profil",
+    "settings": "Paramètres",
+    "language": "Langue",
+    "currency": "Devise",
+    "logout": "Déconnexion",
+    "darkMode": "Mode sombre",
+    "help": "Aide & Support",
+    "about": "À propos"
+  },
+  "search": {
+    "title": "Recherche",
+    "recentSearches": "Recherches récentes",
+    "popularSearches": "Recherches populaires",
+    "filters": "Filtres",
+    "applyFilters": "Appliquer les filtres",
+    "resetFilters": "Réinitialiser les filtres",
+    "priceRange": "Fourchette de prix",
+    "propertyType": "Type de bien",
+    "minPrice": "Prix min",
+    "maxPrice": "Prix max",
+    "noResults": "Aucun résultat trouvé",
+    "tryAdjusting": "Essayez d'ajuster vos filtres"
+  },
+  "map": {
+    "title": "Carte",
+    "searchThisArea": "Rechercher dans cette zone",
+    "listView": "Vue liste",
+    "mapView": "Vue carte",
+    "currentLocation": "Position actuelle"
+  },
+  "favorites": {
+    "title": "Favoris",
+    "noFavorites": "Vous n'avez pas encore de favoris",
+    "startBrowsing": "Commencez à parcourir les logements pour ajouter des favoris"
+  },
+  "alerts": {
+    "title": "Créer une alerte",
+    "createAlert": "Créer l'alerte",
+    "alertName": "Nom de l'alerte",
+    "alertNamePlaceholder": "Ex: Appartement Centre-ville",
+    "budget": "Budget",
+    "districts": "Quartiers",
+    "districtNames": {
+      "lakeSide": "Bord du Lac",
+      "downtown": "Centre-ville",
+      "rubavu": "Rubavu",
+      "campus": "Campus",
+      "gisenyiRural": "Gisenyi Rural",
+      "northBeach": "Plage Nord",
+      "mbugangari": "Mbugangari"
+    },
+    "noAlerts": "Vous n'avez pas encore d'alertes",
+    "createYourFirstAlert": "Créez votre première alerte pour être informé des nouveaux logements",
+    "alertCreated": "Alerte créée avec succès",
+    "alertUpdated": "Alerte mise à jour avec succès",
+    "alertDeleted": "Alerte supprimée avec succès"
+  },
+  "messages": {
+    "title": "Messages",
+    "noMessages": "Vous n'avez pas encore de messages",
+    "startConversation": "Commencez une conversation en contactant un propriétaire",
+    "typeMessage": "Écrivez un message...",
+    "send": "Envoyer"
+  },
+  "reviews": {
+    "title": "Avis",
+    "writeReview": "Écrire un avis",
+    "noReviews": "Aucun avis pour le moment",
+    "beTheFirst": "Soyez le premier à laisser un avis",
+    "rating": "Note",
+    "comment": "Commentaire",
+    "reviewPlaceholder": "Partagez votre expérience...",
+    "submitReview": "Soumettre l'avis",
+    "thankYou": "Merci pour votre avis !"
+  },
+  "guides": {
+    "title": "Guides locaux",
+    "popularGuides": "Guides populaires",
+    "readMore": "Lire plus",
+    "noGuides": "Aucun guide disponible",
+    "categories": "Catégories"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue",
+    "network": "Erreur de connexion",
+    "tryAgain": "Veuillez réessayer",
+    "invalidCredentials": "Email ou mot de passe incorrect",
+    "requiredField": "Ce champ est requis",
+    "invalidEmail": "Email invalide",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "weakPassword": "Le mot de passe est trop faible",
+    "emailExists": "Cet email est déjà utilisé"
+  }
+} 

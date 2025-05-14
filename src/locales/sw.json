@@ -1,0 +1,182 @@
+{
+  "common": {
+    "welcome": "Karibu",
+    "search": "Tafuta",
+    "cancel": "Ghairi",
+    "save": "Hifadhi",
+    "next": "Endelea",
+    "previous": "Rudi nyuma",
+    "finish": "Maliza",
+    "create": "Unda",
+    "edit": "Hariri",
+    "delete": "Futa",
+    "back": "Rudi",
+    "confirm": "Thibitisha",
+    "loading": "Inapakia...",
+    "error": "Hitilafu",
+    "success": "Mafanikio",
+    "new": "Mpya"
+  },
+  "auth": {
+    "login": "Ingia",
+    "register": "Jisajili",
+    "forgotPassword": "Umesahau nywila?",
+    "email": "Barua pepe",
+    "password": "Nywila",
+    "confirmPassword": "Thibitisha nywila",
+    "fullName": "Jina kamili",
+    "continueWith": "Endelea na",
+    "phoneNumber": "Namba ya simu",
+    "alreadyHaveAccount": "Una akaunti tayari?",
+    "dontHaveAccount": "Huna akaunti?",
+    "resetPassword": "Weka upya nywila",
+    "resetPasswordInstructions": "Ingiza barua pepe yako na tutakutumia kiungo cha kubadilisha nywila"
+  },
+  "preferences": {
+    "title": "Mapendeleo",
+    "language": "Lugha",
+    "currency": "Sarafu",
+    "notifications": "Arifa",
+    "darkMode": "Mandhari ya Giza",
+    "chooseLanguage": "Chagua lugha yako",
+    "languageDescription": "Chagua lugha unayopendelea kutumia katika programu",
+    "chooseCurrency": "Chagua sarafu yako",
+    "currencyDescription": "Bei zitaonyeshwa katika sarafu hii kwa kawaida",
+    "notificationsDescription": "Pokea arifa kuhusu nyumba mpya na promosheni",
+    "enableNotifications": "Washa arifa",
+    "receiveNotifications": "Pokea arifa"
+  },
+  "languages": {
+    "fr": "Kifaransa",
+    "en": "Kiingereza",
+    "rw": "Kinyarwanda",
+    "sw": "Kiswahili"
+  },
+  "currencies": {
+    "RWF": "Faranga ya Rwanda (RWF)",
+    "USD": "Dola ya Marekani (USD)",
+    "EUR": "Yuro (EUR)"
+  },
+  "property": {
+    "price": "Bei",
+    "location": "Eneo",
+    "bedrooms": "Vyumba vya kulala",
+    "bathrooms": "Vyumba vya kuoga",
+    "area": "Ukubwa",
+    "amenities": "Vifaa",
+    "description": "Maelezo",
+    "contactOwner": "Wasiliana na mmiliki",
+    "seeMore": "Ona zaidi",
+    "addToFavorites": "Ongeza kwenye vipendwa",
+    "removeFromFavorites": "Ondoa kwenye vipendwa",
+    "share": "Shiriki",
+    "perMonth": "kwa mwezi",
+    "perNight": "kwa usiku",
+    "available": "Inapatikana",
+    "unavailable": "Haipatikani",
+    "noResults": "Hakuna matokeo",
+    "type": "Aina ya nyumba",
+    "types": {
+      "apartment": "Flati",
+      "house": "Nyumba",
+      "villa": "Villa",
+      "studio": "Studio",
+      "room": "Chumba"
+    }
+  },
+  "profile": {
+    "myProfile": "Wasifu wangu",
+    "editProfile": "Hariri wasifu",
+    "settings": "Mipangilio",
+    "language": "Lugha",
+    "currency": "Sarafu",
+    "logout": "Toka",
+    "darkMode": "Mandhari ya Giza",
+    "help": "Msaada",
+    "about": "Kuhusu"
+  },
+  "search": {
+    "title": "Tafuta",
+    "recentSearches": "Utafutaji wa hivi karibuni",
+    "popularSearches": "Utafutaji maarufu",
+    "filters": "Vichujio",
+    "applyFilters": "Tumia vichujio",
+    "resetFilters": "Weka upya vichujio",
+    "priceRange": "Kipimo cha bei",
+    "propertyType": "Aina ya mali",
+    "minPrice": "Bei ya chini",
+    "maxPrice": "Bei ya juu",
+    "noResults": "Hakuna matokeo yaliyopatikana",
+    "tryAdjusting": "Jaribu kubadilisha vichujio vyako"
+  },
+  "map": {
+    "title": "Ramani",
+    "searchThisArea": "Tafuta katika eneo hili",
+    "listView": "Mwonekano wa orodha",
+    "mapView": "Mwonekano wa ramani",
+    "currentLocation": "Eneo la sasa"
+  },
+  "favorites": {
+    "title": "Vipendwa",
+    "noFavorites": "Bado huna vipendwa",
+    "startBrowsing": "Anza kuvinjari mali ili kuongeza vipendwa"
+  },
+  "alerts": {
+    "title": "Unda Arifa",
+    "createAlert": "Unda arifa",
+    "alertName": "Jina la arifa",
+    "alertNamePlaceholder": "Mfano: Flati Mjini",
+    "budget": "Bajeti",
+    "districts": "Wilaya",
+    "districtNames": {
+      "lakeSide": "Kando ya Ziwa",
+      "downtown": "Mjini",
+      "rubavu": "Rubavu",
+      "campus": "Kampasi",
+      "gisenyiRural": "Gisenyi Vijijini",
+      "northBeach": "Pwani ya Kaskazini",
+      "mbugangari": "Mbugangari"
+    },
+    "noAlerts": "Bado huna arifa zozote",
+    "createYourFirstAlert": "Unda arifa yako ya kwanza ili ujulishwe kuhusu mali mpya",
+    "alertCreated": "Arifa imeundwa kwa mafanikio",
+    "alertUpdated": "Arifa imesasishwa kwa mafanikio",
+    "alertDeleted": "Arifa imefutwa kwa mafanikio"
+  },
+  "messages": {
+    "title": "Ujumbe",
+    "noMessages": "Bado huna ujumbe wowote",
+    "startConversation": "Anza mazungumzo kwa kuwasiliana na mmiliki wa mali",
+    "typeMessage": "Andika ujumbe...",
+    "send": "Tuma"
+  },
+  "reviews": {
+    "title": "Maoni",
+    "writeReview": "Andika maoni",
+    "noReviews": "Bado hakuna maoni",
+    "beTheFirst": "Kuwa wa kwanza kutoa maoni",
+    "rating": "Kiwango",
+    "comment": "Maoni",
+    "reviewPlaceholder": "Shiriki uzoefu wako...",
+    "submitReview": "Wasilisha maoni",
+    "thankYou": "Asante kwa maoni yako!"
+  },
+  "guides": {
+    "title": "Miongozo ya Mtaa",
+    "popularGuides": "Miongozo maarufu",
+    "readMore": "Soma zaidi",
+    "noGuides": "Hakuna miongozo inayopatikana",
+    "categories": "Jamii"
+  },
+  "errors": {
+    "generic": "Hitilafu imetokea",
+    "network": "Hitilafu ya mtandao",
+    "tryAgain": "Tafadhali jaribu tena",
+    "invalidCredentials": "Barua pepe au nywila batili",
+    "requiredField": "Sehemu hii inahitajika",
+    "invalidEmail": "Barua pepe batili",
+    "passwordMismatch": "Nywila hazifanani",
+    "weakPassword": "Nywila ni dhaifu mno",
+    "emailExists": "Barua pepe hii tayari inatumika"
+  }
+} 

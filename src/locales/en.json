@@ -1,0 +1,182 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "search": "Search",
+    "cancel": "Cancel",
+    "save": "Save",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "new": "New"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot password?",
+    "email": "Email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "fullName": "Full name",
+    "continueWith": "Continue with",
+    "phoneNumber": "Phone number",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "resetPassword": "Reset password",
+    "resetPasswordInstructions": "Enter your email address and we'll send you a link to reset your password"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "language": "Language",
+    "currency": "Currency",
+    "notifications": "Notifications",
+    "darkMode": "Dark mode",
+    "chooseLanguage": "Choose your language",
+    "languageDescription": "Select the language you prefer to use in the application",
+    "chooseCurrency": "Choose your currency",
+    "currencyDescription": "Prices will be displayed in this currency by default",
+    "notificationsDescription": "Receive alerts about new properties and promotions",
+    "enableNotifications": "Enable notifications",
+    "receiveNotifications": "Receive notifications"
+  },
+  "languages": {
+    "fr": "French",
+    "en": "English",
+    "rw": "Kinyarwanda",
+    "sw": "Swahili"
+  },
+  "currencies": {
+    "RWF": "Rwandan Franc (RWF)",
+    "USD": "US Dollar (USD)",
+    "EUR": "Euro (EUR)"
+  },
+  "property": {
+    "price": "Price",
+    "location": "Location",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "area": "Area",
+    "amenities": "Amenities",
+    "description": "Description",
+    "contactOwner": "Contact owner",
+    "seeMore": "See more",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "share": "Share",
+    "perMonth": "per month",
+    "perNight": "per night",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "noResults": "No results",
+    "type": "Property type",
+    "types": {
+      "apartment": "Apartment",
+      "house": "House",
+      "villa": "Villa",
+      "studio": "Studio",
+      "room": "Room"
+    }
+  },
+  "profile": {
+    "myProfile": "My profile",
+    "editProfile": "Edit profile",
+    "settings": "Settings",
+    "language": "Language",
+    "currency": "Currency",
+    "logout": "Logout",
+    "darkMode": "Dark mode",
+    "help": "Help & Support",
+    "about": "About"
+  },
+  "search": {
+    "title": "Search",
+    "recentSearches": "Recent searches",
+    "popularSearches": "Popular searches",
+    "filters": "Filters",
+    "applyFilters": "Apply filters",
+    "resetFilters": "Reset filters",
+    "priceRange": "Price range",
+    "propertyType": "Property type",
+    "minPrice": "Min price",
+    "maxPrice": "Max price",
+    "noResults": "No results found",
+    "tryAdjusting": "Try adjusting your filters"
+  },
+  "map": {
+    "title": "Map",
+    "searchThisArea": "Search this area",
+    "listView": "List view",
+    "mapView": "Map view",
+    "currentLocation": "Current location"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "noFavorites": "You don't have any favorites yet",
+    "startBrowsing": "Start browsing properties to add favorites"
+  },
+  "alerts": {
+    "title": "Create Alert",
+    "createAlert": "Create alert",
+    "alertName": "Alert name",
+    "alertNamePlaceholder": "E.g: Downtown Apartment",
+    "budget": "Budget",
+    "districts": "Districts",
+    "districtNames": {
+      "lakeSide": "Lake Side",
+      "downtown": "Downtown",
+      "rubavu": "Rubavu",
+      "campus": "Campus",
+      "gisenyiRural": "Gisenyi Rural",
+      "northBeach": "North Beach",
+      "mbugangari": "Mbugangari"
+    },
+    "noAlerts": "You don't have any alerts yet",
+    "createYourFirstAlert": "Create your first alert to be notified about new properties",
+    "alertCreated": "Alert created successfully",
+    "alertUpdated": "Alert updated successfully",
+    "alertDeleted": "Alert deleted successfully"
+  },
+  "messages": {
+    "title": "Messages",
+    "noMessages": "You don't have any messages yet",
+    "startConversation": "Start a conversation by contacting a property owner",
+    "typeMessage": "Type a message...",
+    "send": "Send"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "writeReview": "Write a review",
+    "noReviews": "No reviews yet",
+    "beTheFirst": "Be the first to leave a review",
+    "rating": "Rating",
+    "comment": "Comment",
+    "reviewPlaceholder": "Share your experience...",
+    "submitReview": "Submit review",
+    "thankYou": "Thank you for your review!"
+  },
+  "guides": {
+    "title": "Local Guides",
+    "popularGuides": "Popular guides",
+    "readMore": "Read more",
+    "noGuides": "No guides available",
+    "categories": "Categories"
+  },
+  "errors": {
+    "generic": "An error occurred",
+    "network": "Network error",
+    "tryAgain": "Please try again",
+    "invalidCredentials": "Invalid email or password",
+    "requiredField": "This field is required",
+    "invalidEmail": "Invalid email",
+    "passwordMismatch": "Passwords don't match",
+    "weakPassword": "Password is too weak",
+    "emailExists": "This email is already in use"
+  }
+} 

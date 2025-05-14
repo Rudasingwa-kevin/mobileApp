@@ -1,0 +1,36 @@
+<svg width="240" height="200" viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond -->
+  <circle cx="120" cy="100" r="80" fill="#E0F7FA" />
+  
+  <!-- Pièces de monnaie -->
+  <circle cx="100" cy="75" r="30" fill="#FFEB3B" stroke="#006064" stroke-width="2" />
+  <circle cx="100" cy="75" r="25" fill="#FFF9C4" stroke="#006064" stroke-width="1" />
+  <circle cx="100" cy="75" r="20" fill="#FFEB3B" stroke="#006064" stroke-width="1" />
+  <text x="100" y="80" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#006064">$</text>
+  
+  <circle cx="130" cy="110" r="30" fill="#FFEB3B" stroke="#006064" stroke-width="2" />
+  <circle cx="130" cy="110" r="25" fill="#FFF9C4" stroke="#006064" stroke-width="1" />
+  <circle cx="130" cy="110" r="20" fill="#FFEB3B" stroke="#006064" stroke-width="1" />
+  <text x="130" y="115" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#006064">€</text>
+  
+  <circle cx="160" cy="75" r="30" fill="#FFEB3B" stroke="#006064" stroke-width="2" />
+  <circle cx="160" cy="75" r="25" fill="#FFF9C4" stroke="#006064" stroke-width="1" />
+  <circle cx="160" cy="75" r="20" fill="#FFEB3B" stroke="#006064" stroke-width="1" />
+  <text x="160" y="80" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#006064">₣</text>
+  
+  <!-- Billets de banque -->
+  <rect x="60" y="125" width="60" height="35" rx="4" fill="#4CAF50" stroke="#006064" stroke-width="2" />
+  <rect x="65" y="130" width="50" height="25" rx="2" fill="#A5D6A7" stroke="#006064" stroke-width="1" />
+  <text x="90" y="147" font-family="Arial" font-size="12" font-weight="bold" text-anchor="middle" fill="#006064">RWF</text>
+  
+  <rect x="80" y="135" width="60" height="35" rx="4" fill="#2196F3" stroke="#006064" stroke-width="2" />
+  <rect x="85" y="140" width="50" height="25" rx="2" fill="#90CAF9" stroke="#006064" stroke-width="1" />
+  <text x="110" y="157" font-family="Arial" font-size="12" font-weight="bold" text-anchor="middle" fill="#006064">USD</text>
+  
+  <!-- Symbole de graphique de conversion -->
+  <line x1="50" y1="60" x2="50" y2="160" stroke="#006064" stroke-width="2" />
+  <line x1="45" y1="155" x2="180" y2="155" stroke="#006064" stroke-width="2" />
+  
+  <path d="M55 130C65 100 80 110 90 95C100 80 110 90 120 85C130 80 140 100 150 90C160 80 170 90 180 70" 
+        stroke="#00BCD4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+</svg> 

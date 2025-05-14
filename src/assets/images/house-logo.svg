@@ -1,0 +1,29 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cercle de fond -->
+  <circle cx="60" cy="60" r="55" fill="#E0F7FA" />
+  
+  <!-- Maison principale -->
+  <path d="M30 50L60 25L90 50V90H30V50Z" fill="#B2EBF2" stroke="#006064" stroke-width="3" />
+  
+  <!-- Toit -->
+  <path d="M25 50L60 20L95 50" stroke="#006064" stroke-width="4" stroke-linecap="round" />
+  
+  <!-- Porte -->
+  <rect x="50" y="65" width="20" height="25" rx="2" fill="#006064" />
+  <circle cx="55" cy="75" r="2" fill="#FFFFFF" />
+  
+  <!-- Fenêtres -->
+  <rect x="38" y="55" width="12" height="12" rx="1" fill="#FFFFFF" stroke="#006064" stroke-width="2" />
+  <rect x="70" y="55" width="12" height="12" rx="1" fill="#FFFFFF" stroke="#006064" stroke-width="2" />
+  
+  <!-- Chemin d'entrée -->
+  <path d="M50 90H70L75 100H45L50 90Z" fill="#B2EBF2" stroke="#006064" stroke-width="2" />
+  
+  <!-- Texte "LocaMap" -->
+  <text x="60" y="110" font-family="Arial" font-size="12" font-weight="bold" text-anchor="middle" fill="#006064">GISENYI</text>
+  
+  <!-- Emplacement / Marqueur de la carte -->
+  <circle cx="85" cy="30" r="12" fill="#F44336" fill-opacity="0.8" />
+  <path d="M85 20C80 20 75 25 75 30C75 40 85 45 85 45C85 45 95 40 95 30C95 25 90 20 85 20Z" fill="#F44336" />
+  <circle cx="85" cy="28" r="3" fill="#FFFFFF" />
+</svg> 
