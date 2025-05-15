@@ -20,6 +20,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { colors, spacing, typography, borderRadius, shadows } from '../theme';
 import Animated, { FadeIn, FadeInUp, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useTranslation } from 'react-i18next';
 
 // Components
 import PriceMarker from '../components/PriceMarker';
@@ -47,6 +48,7 @@ const INITIAL_REGION: Region = {
 };
 
 const MapScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<MapScreenNavigationProp>();
   const theme = useTheme();
   const mapRef = useRef<MapView>(null);
@@ -115,7 +117,7 @@ const MapScreen: React.FC = () => {
   };
 
   // Rendu des marqueurs
-  const renderMarker = (item: any) => (
+  const renderMarker = (item: Property) => (
     <Marker
       key={item.id}
       coordinate={item.location.coordinates}
@@ -133,7 +135,7 @@ const MapScreen: React.FC = () => {
   );
 
   // Rendu des cartes de propriété
-  const renderPropertyCard = ({ item, index }: { item: any; index: number }) => (
+  const renderPropertyCard = ({ item, index }: { item: Property; index: number }) => (
     <Animated.View
       entering={FadeInUp.delay(index * 100).duration(400)}
       style={[
@@ -166,7 +168,7 @@ const MapScreen: React.FC = () => {
           <View style={styles.priceContainer}>
             <Text style={styles.priceText}>
               <Text style={styles.priceBold}>{item.price} {item.currency}</Text>
-              <Text style={styles.priceUnit}> / nuit</Text>
+              <Text style={styles.priceUnit}> {t('property.perNight')}</Text>
             </Text>
           </View>
         </View>

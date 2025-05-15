@@ -1,36 +1,45 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Dimensions, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, Dimensions, Platform, ImageSourcePropType } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../theme';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import PriceDisplay from './PriceDisplay';
-
-interface Property {
-  id: string;
-  title: string;
-  location: string;
-  priceInRwf: number;
-  image: string;
-  bedrooms: number;
-  bathrooms: number;
-  area: number;
-  isPerNight?: boolean;
-  isFavorite?: boolean;
-}
+import { Property } from '../../types';
+import { convertToRwf } from '../utils/currency';
+import { Currency } from '../../store/preferences';
 
 interface PropertyCardProps {
   property: Property;
   index: number;
   onPress: () => void;
   onFavoritePress?: () => void;
+  isFavoriteState?: boolean;
 }
 
-const PropertyCard = ({ property, index, onPress, onFavoritePress }: PropertyCardProps) => {
+const PropertyCard = ({ property, index, onPress, onFavoritePress, isFavoriteState }: PropertyCardProps) => {
   const { width } = Dimensions.get('window');
   const imageWidth = width - (spacing[4] * 2);
   const { t } = useTranslation();
+
+  const priceInRwf = property.currency === 'RWF' 
+    ? property.price 
+    : convertToRwf(property.price, property.currency as Currency);
+
+  let imageSource: ImageSourcePropType | { uri: string };
+  if (property.images && property.images.length > 0) {
+    if (typeof property.images[0] === 'string') {
+      imageSource = { uri: property.images[0] };
+    } else {
+      imageSource = property.images[0] as ImageSourcePropType;
+    }
+  } else {
+    imageSource = { uri: 'https://via.placeholder.com/600x400.png?text=Image+non+disponible' };
+  }
+
+  const displayLocation = property.location?.address || property.location?.district || property.location?.city || t('common.unknownLocation');
+  const currentIsFavorite = isFavoriteState !== undefined ? isFavoriteState : property.isFavorite;
 
   return (
     <Animated.View
@@ -45,17 +54,10 @@ const PropertyCard = ({ property, index, onPress, onFavoritePress }: PropertyCar
         {/* Image */}
         <View style={styles.imageContainer}>
           <Image 
-            source={{ uri: property.image }} 
+            source={imageSource} 
             style={[styles.image, { width: imageWidth }]} 
             resizeMode="cover" 
           />
-          
-          {/* Badge "Nouveau" */}
-          {property.isNew && (
-            <View style={styles.newBadge}>
-              <Text style={styles.newBadgeText}>Nouveau</Text>
-            </View>
-          )}
           
           {/* Bouton favoris */}
           {onFavoritePress && (
@@ -67,9 +69,9 @@ const PropertyCard = ({ property, index, onPress, onFavoritePress }: PropertyCar
               }}
             >
               <Ionicons 
-                name={property.isFavorite ? "heart" : "heart-outline"} 
+                name={currentIsFavorite ? "heart" : "heart-outline"} 
                 size={20} 
-                color={property.isFavorite ? colors.error : colors.white} 
+                color={currentIsFavorite ? colors.error : colors.white} 
               />
             </TouchableOpacity>
           )}
@@ -86,32 +88,37 @@ const PropertyCard = ({ property, index, onPress, onFavoritePress }: PropertyCar
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={14} color={colors.gray[500]} />
             <Text style={styles.location} numberOfLines={1}>
-              {property.location}
+              {displayLocation}
             </Text>
           </View>
           
           <View style={styles.infoRow}>
-            <View style={styles.info}>
-              <Ionicons name="bed-outline" size={16} color={colors.gray[600]} />
-              <Text style={styles.infoText}>{property.bedrooms}</Text>
-            </View>
-            <View style={styles.info}>
-              <Ionicons name="water-outline" size={16} color={colors.gray[600]} />
-              <Text style={styles.infoText}>{property.bathrooms}</Text>
-            </View>
-            <View style={styles.info}>
-              <Ionicons name="resize-outline" size={16} color={colors.gray[600]} />
-              <Text style={styles.infoText}>{property.area} m²</Text>
-            </View>
+            {property.bedrooms !== undefined && (
+              <View style={styles.info}>
+                <Ionicons name="bed-outline" size={16} color={colors.gray[600]} />
+                <Text style={styles.infoText}>{property.bedrooms} {t('property.bedrooms', { count: property.bedrooms })}</Text>
+              </View>
+            )}
+            {property.bathrooms !== undefined && (
+              <View style={styles.info}>
+                <Ionicons name="water-outline" size={16} color={colors.gray[600]} />
+                <Text style={styles.infoText}>{property.bathrooms} {t('property.bathrooms', { count: property.bathrooms })}</Text>
+              </View>
+            )}
+            {(property.surface !== undefined || property.size !== undefined) && (
+              <View style={styles.info}>
+                <Ionicons name="resize-outline" size={16} color={colors.gray[600]} />
+                <Text style={styles.infoText}>{property.size || property.surface} m²</Text>
+              </View>
+            )}
           </View>
           
           <View style={styles.priceContainer}>
             <PriceDisplay 
-              priceInRwf={property.priceInRwf}
+              priceInRwf={priceInRwf}
               size="medium"
-              showOriginal={true}
-              isPerMonth={!property.isPerNight}
-              isPerNight={property.isPerNight}
+              isPerNight={false}
+              isPerMonth={true}
             />
           </View>
         </View>
@@ -150,20 +157,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
   },
-  newBadge: {
-    position: 'absolute',
-    top: spacing[3],
-    left: spacing[3],
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[1],
-    borderRadius: borderRadius.full,
-  },
-  newBadgeText: {
-    color: colors.white,
-    fontSize: typography.fontSize.xs,
-    fontWeight: '500',
-  },
   heartButton: {
     position: 'absolute',
     top: spacing[3],
@@ -190,16 +183,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.gray[800],
   },
-  rating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: '500',
-    color: colors.gray[700],
-    marginLeft: spacing[1],
-  },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -214,11 +197,13 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     marginBottom: spacing[3],
+    flexWrap: 'wrap',
   },
   info: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: spacing[3],
+    marginBottom: spacing[1],
   },
   infoText: {
     fontSize: typography.fontSize.sm,
@@ -229,6 +214,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    marginTop: spacing[2],
   },
 });
 

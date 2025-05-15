@@ -1,7 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
-import { usePreferences } from '../store/preferences';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import de tous les fichiers de traduction
@@ -76,20 +75,6 @@ export const initializeLanguage = async (): Promise<string> => {
     i18n.changeLanguage('fr');
     return 'fr';
   }
-};
-
-/**
- * Hook pour synchroniser la langue du store avec i18next
- */
-export const useSyncLanguage = () => {
-  const { language } = usePreferences();
-  
-  // Mettre à jour la langue d'i18next lorsque celle du store change
-  if (i18n.language !== language) {
-    i18n.changeLanguage(language);
-  }
-  
-  return i18n;
 };
 
 /**

@@ -1,58 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
-import { Title, Text, Button, Divider, Snackbar, RadioButton } from 'react-native-paper';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image } from 'react-native';
+import { Text, Button, Divider, Snackbar, IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import SocialLoginButton from '../components/SocialLoginButton';
 import FormField from '../components/FormField';
 import SimpleAnimatedView from '../components/SimpleAnimatedView';
-import { useUserPreferences, Language, Currency } from '../store/userPreferences';
+import { useUserPreferences } from '../store/userPreferences';
+import { useTranslation } from 'react-i18next';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type AuthScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Auth'>;
 
 const AuthScreen = () => {
   const navigation = useNavigation<AuthScreenNavigationProp>();
   const { preferences, setUserPreferences } = useUserPreferences();
+  const { t } = useTranslation();
 
   // Form state
   const [formData, setFormData] = useState({
-    fullName: '',
     email: '',
-    language: 'fr' as Language,
-    currency: 'USD' as Currency,
+    password: '',
   });
   
   // Validation errors
   const [errors, setErrors] = useState({
-    fullName: '',
     email: '',
+    password: '',
   });
   
   // UI state
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = (): boolean => {
     let isValid = true;
     const newErrors = {
-      fullName: '',
       email: '',
+      password: '',
     };
-
-    // Validate name
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Nom complet requis';
-      isValid = false;
-    }
 
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      newErrors.email = 'Email requis';
+      newErrors.email = t('auth.emailRequired');
       isValid = false;
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Format d\'email invalide';
+      newErrors.email = t('auth.invalidEmail');
+      isValid = false;
+    }
+
+    // Validate password
+    if (!formData.password) {
+      newErrors.password = t('auth.passwordRequired');
+      isValid = false;
+    } else if (formData.password.length < 6) {
+      newErrors.password = t('auth.passwordTooShort');
       isValid = false;
     }
 
@@ -61,50 +66,75 @@ const AuthScreen = () => {
   };
 
   const handleSocialLogin = (provider: 'google' | 'facebook') => {
-    // Simulate social login by pre-filling form with mock data
-    const mockData = {
-      google: {
-        fullName: 'User Google',
-        email: 'user.google@gmail.com',
-      },
-      facebook: {
-        fullName: 'User Facebook',
-        email: 'user.facebook@facebook.com',
-      },
-    };
-
-    setFormData({
-      ...formData,
-      fullName: mockData[provider].fullName,
-      email: mockData[provider].email,
-    });
-
-    // Show success snackbar
-    setSnackbarMessage(`Connexion ${provider} simulée. Vous pouvez modifier vos informations.`);
-    setSnackbarVisible(true);
-  };
-
-  const handleContinue = () => {
-    if (validateForm()) {
-      // Save to store
+    // Simulate social login
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      // Mock successful login
       setUserPreferences({
-        fullName: formData.fullName,
-        email: formData.email,
-        language: formData.language,
-        currency: formData.currency,
+        fullName: provider === 'google' ? 'User Google' : 'User Facebook',
+        email: provider === 'google' ? 'user.google@gmail.com' : 'user.facebook@facebook.com',
+        language: preferences.language,
+        currency: preferences.currency,
         isLoggedIn: true,
-        authProvider: 'manual',
+        authProvider: provider,
       });
 
       // Show success message
-      setSnackbarMessage('Profil enregistré avec succès!');
+      setSnackbarMessage(t('auth.loginSuccess'));
       setSnackbarVisible(true);
+      setIsLoading(false);
 
-      // Navigate to home screen after a short delay
+      // Navigate to home or preference carousel screen after a short delay
       setTimeout(() => {
-        navigation.navigate('Home');
+        if (preferences.hasCompletedOnboarding) {
+          navigation.navigate('Home');
+        } else {
+          navigation.navigate('PreferenceCarousel');
+        }
       }, 1000);
+    }, 1500);
+  };
+
+  const handleLogin = () => {
+    if (validateForm()) {
+      setIsLoading(true);
+      
+      // Simulate API call
+      setTimeout(() => {
+        // Save to store
+        setUserPreferences({
+          fullName: 'User Name', // Would be from API in real app
+          email: formData.email,
+          language: preferences.language,
+          currency: preferences.currency,
+          isLoggedIn: true,
+          authProvider: 'manual',
+        });
+
+        // Show success message
+        setSnackbarMessage(t('auth.loginSuccess'));
+        setSnackbarVisible(true);
+        setIsLoading(false);
+
+        // Navigate to home screen or preference carousel after a short delay
+        setTimeout(() => {
+          if (preferences.hasCompletedOnboarding) {
+            navigation.navigate('Home');
+          } else {
+            navigation.navigate('PreferenceCarousel');
+          }
+        }, 1000);
+      }, 1500);
     }
+  };
+
+  const navigateToRegister = () => {
+    navigation.navigate('Register');
+  };
+
+  const navigateToForgotPassword = () => {
+    navigation.navigate('ForgotPassword');
   };
 
   return (
@@ -119,10 +149,64 @@ const AuthScreen = () => {
         keyboardShouldPersistTaps="handled"
       >
         <SimpleAnimatedView animation="fadeIn" duration={800}>
-          <Title style={styles.title}>Créer votre profil</Title>
+          <Image
+            source={require('../assets/images/house-logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>{t('auth.login')}</Text>
           <Text style={styles.subtitle}>
-            Configurez vos préférences pour une meilleure expérience
+            {t('auth.loginSubtitle')}
           </Text>
+        </SimpleAnimatedView>
+
+        {/* Login form */}
+        <SimpleAnimatedView animation="slideInRight" delay={600} style={styles.form}>
+          <FormField
+            label={t('auth.email')}
+            value={formData.email}
+            onChangeText={(text) => setFormData({ ...formData, email: text })}
+            error={errors.email}
+            keyboardType="email-address"
+            placeholder={t('auth.emailPlaceholder')}
+          />
+
+          <FormField
+            label={t('auth.password')}
+            value={formData.password}
+            onChangeText={(text) => setFormData({ ...formData, password: text })}
+            error={errors.password}
+            secureTextEntry
+            placeholder={t('auth.passwordPlaceholder')}
+          />
+
+          <TouchableOpacity
+            onPress={navigateToForgotPassword}
+            style={styles.forgotPasswordContainer}
+          >
+            <Text style={styles.forgotPasswordText}>{t('auth.forgotPassword')}</Text>
+          </TouchableOpacity>
+
+          <SimpleAnimatedView animation="slideInUp" delay={800}>
+            <Button
+              mode="contained"
+              onPress={handleLogin}
+              style={styles.loginButton}
+              labelStyle={styles.buttonLabel}
+              loading={isLoading}
+              disabled={isLoading}
+            >
+              {t('auth.login')}
+            </Button>
+          </SimpleAnimatedView>
+        </SimpleAnimatedView>
+
+        <SimpleAnimatedView animation="fadeIn" delay={400}>
+          <View style={styles.dividerContainer}>
+            <Divider style={styles.divider} />
+            <Text style={styles.dividerText}>{t('common.or')}</Text>
+            <Divider style={styles.divider} />
+          </View>
         </SimpleAnimatedView>
 
         {/* Social login buttons */}
@@ -137,95 +221,13 @@ const AuthScreen = () => {
           />
         </SimpleAnimatedView>
 
-        <SimpleAnimatedView animation="fadeIn" delay={400}>
-          <View style={styles.dividerContainer}>
-            <Divider style={styles.divider} />
-            <Text style={styles.dividerText}>ou</Text>
-            <Divider style={styles.divider} />
+        <SimpleAnimatedView animation="fadeIn" delay={1000}>
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>{t('auth.dontHaveAccount')}</Text>
+            <TouchableOpacity onPress={navigateToRegister}>
+              <Text style={styles.registerLink}>{t('auth.register')}</Text>
+            </TouchableOpacity>
           </View>
-        </SimpleAnimatedView>
-
-        {/* Manual registration form */}
-        <SimpleAnimatedView animation="slideInRight" delay={600} style={styles.form}>
-          <FormField
-            label="Nom complet"
-            value={formData.fullName}
-            onChangeText={(text) => setFormData({ ...formData, fullName: text })}
-            error={errors.fullName}
-            autoCapitalize="words"
-          />
-
-          <FormField
-            label="Email"
-            value={formData.email}
-            onChangeText={(text) => setFormData({ ...formData, email: text })}
-            error={errors.email}
-            keyboardType="email-address"
-          />
-
-          {/* Language selection */}
-          <Text style={styles.sectionTitle}>Langue préférée</Text>
-          <View style={styles.radioGroup}>
-            {[
-              { value: 'fr', label: 'Français' },
-              { value: 'en', label: 'English' },
-              { value: 'rw', label: 'Kinyarwanda' },
-              { value: 'sw', label: 'Swahili' }
-            ].map((item) => (
-              <TouchableOpacity 
-                key={item.value}
-                style={styles.radioItemTouchable}
-                onPress={() => setFormData({ ...formData, language: item.value as Language })}
-              >
-                <View style={styles.radioItemContent}>
-                  <RadioButton.Android
-                    value={item.value}
-                    status={formData.language === item.value ? 'checked' : 'unchecked'}
-                    onPress={() => setFormData({ ...formData, language: item.value as Language })}
-                    color="#006064"
-                  />
-                  <Text style={styles.radioLabel}>{item.label}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Currency selection */}
-          <Text style={styles.sectionTitle}>Devise préférée</Text>
-          <View style={styles.radioGroup}>
-            {[
-              { value: 'RWF', label: 'RWF' },
-              { value: 'USD', label: 'USD' },
-              { value: 'EUR', label: 'EUR' }
-            ].map((item) => (
-              <TouchableOpacity 
-                key={item.value}
-                style={styles.radioItemTouchable}
-                onPress={() => setFormData({ ...formData, currency: item.value as Currency })}
-              >
-                <View style={styles.radioItemContent}>
-                  <RadioButton.Android
-                    value={item.value}
-                    status={formData.currency === item.value ? 'checked' : 'unchecked'}
-                    onPress={() => setFormData({ ...formData, currency: item.value as Currency })}
-                    color="#006064"
-                  />
-                  <Text style={styles.radioLabel}>{item.label}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <SimpleAnimatedView animation="slideInUp" delay={800}>
-            <Button
-              mode="contained"
-              onPress={handleContinue}
-              style={styles.continueButton}
-              labelStyle={styles.buttonLabel}
-            >
-              Continuer
-            </Button>
-          </SimpleAnimatedView>
         </SimpleAnimatedView>
       </ScrollView>
 
@@ -247,78 +249,89 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
   contentContainer: {
-    padding: 20,
-    paddingTop: 40,
+    padding: 24,
+    paddingTop: 60,
     paddingBottom: 40,
+    justifyContent: 'center',
+    minHeight: '100%',
+  },
+  logo: {
+    width: 60,
+    height: 60,
+    alignSelf: 'center',
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#006064',
+    color: '#FF5A5F',
     textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#717171',
     textAlign: 'center',
-    marginTop: 8,
+    marginBottom: 36,
+  },
+  form: {
     marginBottom: 24,
   },
+  forgotPasswordContainer: {
+    alignItems: 'flex-end',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  forgotPasswordText: {
+    color: '#484848',
+    fontSize: 14,
+  },
   socialButtons: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 16,
+    marginVertical: 24,
   },
   divider: {
     flex: 1,
     height: 1,
+    backgroundColor: '#E0E0E0',
   },
   dividerText: {
-    marginHorizontal: 8,
-    color: '#666',
+    marginHorizontal: 16,
+    color: '#717171',
+    fontWeight: '500',
   },
-  form: {
+  loginButton: {
     marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 12,
-    color: '#333',
-  },
-  radioGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-  },
-  radioItemTouchable: {
-    width: '50%',
-    marginVertical: 6,
-  },
-  radioItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  radioLabel: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 4,
-  },
-  continueButton: {
-    marginTop: 24,
-    backgroundColor: '#006064',
+    backgroundColor: '#FF5A5F',
     paddingVertical: 8,
+    borderRadius: 8,
   },
   buttonLabel: {
     fontSize: 16,
     fontWeight: 'bold',
+    paddingVertical: 4,
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  registerText: {
+    fontSize: 14,
+    color: '#484848',
+  },
+  registerLink: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FF5A5F',
+    marginLeft: 6,
   },
   snackbar: {
     backgroundColor: '#323232',

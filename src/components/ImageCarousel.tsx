@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { StyleSheet, View, Dimensions, Image, TouchableOpacity } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
 

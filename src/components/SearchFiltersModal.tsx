@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { Modal, Portal, Text, Button, Checkbox, Chip, RadioButton, useTheme, Divider } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useSearchStore, SearchFilters } from '../store/search';
 import { propertyTypes, amenities, pointsOfInterest } from '../data/mockListings';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';

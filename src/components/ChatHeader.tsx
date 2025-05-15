@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, shadows } from '../theme';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface ChatHeaderProps {
   userName: string;
@@ -12,13 +13,25 @@ interface ChatHeaderProps {
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ userName, userAvatar, propertyTitle }) => {
   const navigation = useNavigation();
+  const statusBarHeight = StatusBar.currentHeight || 0;
+  const iosStatusBarHeight = 47; // Approximate iOS status bar height
   
   return (
-    <View style={styles.container}>
+    <Animated.View 
+      entering={FadeIn.duration(300)}
+      style={[
+        styles.container,
+        { 
+          paddingTop: Platform.OS === 'ios' ? iosStatusBarHeight : statusBarHeight,
+          height: Platform.OS === 'ios' ? 88 + statusBarHeight : 64 + statusBarHeight,
+        }
+      ]}
+    >
       <View style={styles.leftSection}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
         >
           <Ionicons name="chevron-back" size={24} color={colors.gray[800]} />
         </TouchableOpacity>
@@ -40,11 +53,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ userName, userAvatar, propertyT
       </TouchableOpacity>
       
       <View style={styles.rightSection}>
-        <TouchableOpacity style={styles.infoButton}>
-          <Ionicons name="ellipsis-vertical" size={20} color={colors.gray[800]} />
+        <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+          <Ionicons name="call-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -53,21 +66,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing[2],
-    height: Platform.OS === 'ios' ? 88 : 56, // Extra height for iOS status bar
-    paddingTop: Platform.OS === 'ios' ? 32 : 0, // Padding for iOS status bar
+    paddingHorizontal: spacing[3],
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.gray[200],
     ...shadows.sm,
+    zIndex: 10,
   },
   leftSection: {
     width: 40,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   backButton: {
     padding: spacing[1],
+    borderRadius: 20,
   },
   centerSection: {
     flex: 1,
@@ -76,30 +89,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: spacing[2],
+    borderWidth: 1,
+    borderColor: colors.gray[200],
   },
   userInfo: {
     flex: 1,
   },
   userName: {
     fontSize: typography.fontSize.base,
-    fontWeight: '600',
+    fontWeight: typography.fontWeight.semiBold,
     color: colors.gray[800],
   },
   propertyTitle: {
     fontSize: typography.fontSize.xs,
     color: colors.gray[600],
+    marginTop: 2,
   },
   rightSection: {
     width: 40,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
-  infoButton: {
+  actionButton: {
     padding: spacing[1],
+    borderRadius: 20,
   },
 });
 

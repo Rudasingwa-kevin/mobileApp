@@ -16,12 +16,14 @@ import TextInputField from '../components/TextInputField';
 import { useUserActions } from '../store/user';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
 const RegisterScreen = () => {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
   const { login } = useUserActions();
+  const { t } = useTranslation();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -60,37 +62,37 @@ const RegisterScreen = () => {
     
     // Name validation
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Nom complet requis';
+      newErrors.fullName = t('errors.requiredField');
       isValid = false;
     }
     
     // Email validation
     if (!formData.email.trim()) {
-      newErrors.email = 'Email requis';
+      newErrors.email = t('errors.requiredField');
       isValid = false;
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        newErrors.email = 'Format d\'email invalide';
+        newErrors.email = t('errors.invalidEmail');
         isValid = false;
       }
     }
     
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Mot de passe requis';
+      newErrors.password = t('errors.requiredField');
       isValid = false;
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Minimum 6 caractères';
+      newErrors.password = t('errors.weakPassword');
       isValid = false;
     }
     
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirmation requise';
+      newErrors.confirmPassword = t('errors.requiredField');
       isValid = false;
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      newErrors.confirmPassword = t('errors.passwordMismatch');
       isValid = false;
     }
     
@@ -118,7 +120,7 @@ const RegisterScreen = () => {
       });
       
       setLoading(false);
-      setSnackbarMessage('Compte créé avec succès!');
+      setSnackbarMessage(t('auth.accountCreated'));
       setSnackbarVisible(true);
       
       // Redirect to preferences after registration
@@ -146,9 +148,9 @@ const RegisterScreen = () => {
         </TouchableOpacity>
         
         <Animated.View entering={FadeInDown.duration(800)}>
-          <Text style={styles.title}>Créer votre compte</Text>
+          <Text style={styles.title}>{t('auth.createAccount')}</Text>
           <Text style={styles.subtitle}>
-            Rejoignez-nous pour trouver votre prochain logement à Gisenyi
+            {t('auth.joinUsText')}
           </Text>
           <Image 
             source={require('../assets/images/registration-image.svg')} 
@@ -162,7 +164,7 @@ const RegisterScreen = () => {
           entering={FadeInDown.duration(800).delay(200)}
         >
           <TextInputField
-            label="Nom complet"
+            label={t('auth.fullName')}
             value={formData.fullName}
             onChangeText={(text) => handleInputChange('fullName', text)}
             error={errors.fullName}
@@ -170,11 +172,11 @@ const RegisterScreen = () => {
             icon="account-outline"
             autoCapitalize="words"
             returnKeyType="next"
-            placeholder="Votre nom complet"
+            placeholder={t('auth.fullNamePlaceholder')}
           />
           
           <TextInputField
-            label="Email"
+            label={t('auth.email')}
             value={formData.email}
             onChangeText={(text) => handleInputChange('email', text)}
             error={errors.email}
@@ -183,11 +185,11 @@ const RegisterScreen = () => {
             keyboardType="email-address"
             autoCapitalize="none"
             returnKeyType="next"
-            placeholder="votre@email.com"
+            placeholder={t('auth.emailPlaceholder')}
           />
           
           <TextInputField
-            label="Mot de passe"
+            label={t('auth.password')}
             value={formData.password}
             onChangeText={(text) => handleInputChange('password', text)}
             error={errors.password}
@@ -195,11 +197,11 @@ const RegisterScreen = () => {
             icon="lock-outline"
             secureTextEntry
             returnKeyType="next"
-            placeholder="Minimum 6 caractères"
+            placeholder={t('auth.passwordPlaceholder')}
           />
           
           <TextInputField
-            label="Confirmer le mot de passe"
+            label={t('auth.confirmPassword')}
             value={formData.confirmPassword}
             onChangeText={(text) => handleInputChange('confirmPassword', text)}
             error={errors.confirmPassword}
@@ -207,7 +209,7 @@ const RegisterScreen = () => {
             icon="lock-check-outline"
             secureTextEntry
             returnKeyType="done"
-            placeholder="Retapez votre mot de passe"
+            placeholder={t('auth.confirmPasswordPlaceholder')}
           />
           
           <Animated.View entering={FadeInDown.duration(800).delay(400)}>
@@ -219,7 +221,7 @@ const RegisterScreen = () => {
               loading={loading}
               disabled={loading}
             >
-              Créer un compte
+              {t('auth.register')}
             </Button>
           </Animated.View>
           
@@ -227,9 +229,9 @@ const RegisterScreen = () => {
             style={styles.loginContainer}
             entering={FadeInDown.duration(800).delay(500)}
           >
-            <Text style={styles.loginText}>Déjà un compte ?</Text>
+            <Text style={styles.loginText}>{t('auth.alreadyHaveAccount')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>Se connecter</Text>
+              <Text style={styles.loginLink}>{t('auth.login')}</Text>
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>

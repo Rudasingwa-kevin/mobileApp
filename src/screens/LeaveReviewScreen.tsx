@@ -1,25 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, StatusBar, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, Button, TextInput, Divider, Chip, HelperText, Snackbar } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View, ScrollView, TouchableOpacity, StatusBar, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { Text, Button, TextInput as PaperTextInput, Divider, Chip, HelperText, Snackbar, useTheme, Avatar, ActivityIndicator } from 'react-native-paper';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, spacing, typography, borderRadius, shadows } from '../theme';
-import { RootStackParamList } from '../types';
+import { colors as themeColors, spacing, typography, borderRadius, shadows } from '../theme';
+import { RootStackParamList, Review } from '../types';
 import RatingStars from '../components/RatingStars';
 import useReviewsStore from '../store/reviews';
+import { useUserStore } from '../store/user';
 import Animated, { FadeInUp, FadeIn } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 // Types des props
 type LeaveReviewScreenRouteProp = RouteProp<RootStackParamList, 'LeaveReview'>;
 type LeaveReviewNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+const MAX_COMMENT_LENGTH = 500;
+
 const LeaveReviewScreen = () => {
   const navigation = useNavigation<LeaveReviewNavigationProp>();
   const route = useRoute<LeaveReviewScreenRouteProp>();
   const { propertyId, propertyTitle, ownerId, ownerName } = route.params;
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const { colors } = theme;
   
   const { addReview } = useReviewsStore();
+  const { user } = useUserStore();
   
   // États locaux
   const [rating, setRating] = useState(0);
@@ -27,259 +35,169 @@ const LeaveReviewScreen = () => {
   const [ownerRating, setOwnerRating] = useState(0);
   const [ownerFeedback, setOwnerFeedback] = useState('');
   const [includeOwnerReview, setIncludeOwnerReview] = useState(false);
-  const [stayDuration, setStayDuration] = useState<'court terme' | 'long terme'>('court terme');
+  const [stayDuration, setStayDuration] = useState<'short term' | 'long term'>('short term');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{
-    rating?: string;
-    comment?: string;
-    ownerRating?: string;
-  }>({});
+  const [showSuccessSnackbar, setShowSuccessSnackbar] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   
-  // Valider le formulaire avant soumission
-  const validateForm = () => {
-    const errors: {
-      rating?: string;
-      comment?: string;
-      ownerRating?: string;
-    } = {};
-    
-    if (rating === 0) {
-      errors.rating = 'Veuillez attribuer une note au logement';
-    }
-    
-    if (!comment.trim()) {
-      errors.comment = 'Veuillez partager votre expérience dans un commentaire';
-    } else if (comment.length < 10) {
-      errors.comment = 'Votre commentaire doit contenir au moins 10 caractères';
-    }
-    
-    if (includeOwnerReview && ownerRating === 0) {
-      errors.ownerRating = 'Veuillez attribuer une note au propriétaire';
-    }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+  const handleRatingChange = (newRating: number) => {
+    setRating(newRating);
+    if (validationError) setValidationError(null);
   };
   
-  // Gérer la soumission de l'avis
-  const handleSubmit = () => {
+  const handleCommentChange = (text: string) => {
+    if (text.length <= MAX_COMMENT_LENGTH) {
+      setComment(text);
+    }
+    if (validationError) setValidationError(null);
+  };
+  
+  const validateForm = () => {
+    if (rating === 0) {
+      setValidationError(t('reviews.errorRatingRequired'));
+      return false;
+    }
+    if (comment.trim().length < 10) {
+      setValidationError(t('reviews.errorCommentTooShort', { minLength: 10 }));
+      return false;
+    }
+    setValidationError(null);
+    return true;
+  };
+  
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
     
     setIsSubmitting(true);
     
-    // Simuler un délai API
-    setTimeout(() => {
-      // Ajouter l'avis via le store
-      addReview({
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const newReviewData: Omit<Review, 'id' | 'date'> = {
         propertyId,
-        authorId: 'current_user', // Dans une vraie app, on récupérerait l'ID de l'utilisateur connecté
-        authorName: 'Vous', // Idem pour le nom
+      authorId: user.id || 'anonymous_user',
+      authorName: user.fullName || t('reviews.anonymousUser'),
+      authorAvatar: user.photoURL,
         rating,
-        comment,
-        stayDuration,
+      comment: comment.trim(),
         isVerified: true,
-      });
-      
-      // Si l'avis sur le propriétaire est inclus, on pourrait l'ajouter dans un autre store
-      if (includeOwnerReview && ownerRating > 0) {
-        // Dans une vraie application, on ajouterait cet avis dans un store dédié aux propriétaires
-        console.log('Avis sur le propriétaire:', {
-          ownerId,
-          rating: ownerRating,
-          comment: ownerFeedback,
-        });
-      }
-      
+    };
+    
+    addReview(newReviewData);
       setIsSubmitting(false);
-      setShowSuccess(true);
+    setShowSuccessSnackbar(true);
       
-      // Rediriger vers la page de détail après un délai
       setTimeout(() => {
+      if (navigation.canGoBack()) {
         navigation.goBack();
+      } else {
+        navigation.replace('PropertyDetails', { propertyId });
+      }
       }, 2000);
-    }, 1000);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.outlineVariant }]}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={styles.iconButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.gray[800]} />
+          <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Laisser un avis</Text>
-        <View style={styles.headerRight} />
+        <Text style={[styles.headerTitle, { color: colors.onSurface }]}>{t('reviews.leaveReviewTitle')}</Text>
+        <View style={styles.iconButton} />
       </View>
       
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
         <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={styles.scrollViewContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Informations sur le logement */}
-          <Animated.View entering={FadeIn.duration(300)} style={styles.propertyInfoContainer}>
-            <Text style={styles.propertyTitle}>{propertyTitle}</Text>
-          </Animated.View>
-          
-          <Divider style={styles.divider} />
-          
-          {/* Section de notation */}
-          <Animated.View entering={FadeInUp.delay(100).duration(400)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Comment notez-vous ce logement ?</Text>
-            <View style={styles.ratingContainer}>
-              <RatingStars
-                rating={rating}
-                size={32}
-                onRatingChange={setRating}
-                color="#FFB100"
-              />
-              {rating > 0 && (
-                <Text style={styles.ratingText}>
-                  {rating === 5 ? 'Excellent !' : 
-                   rating >= 4 ? 'Très bien !' : 
-                   rating >= 3 ? 'Bien' : 
-                   rating >= 2 ? 'Moyen' : 'Décevant'}
+          <Animated.View entering={FadeInUp.duration(400)} style={styles.contentContainer}>
+            {/* Property Info */}
+            <View style={styles.propertyInfoCard}>
+              <Text style={[styles.propertyTitle, {color: colors.onSurface}]}>{propertyTitle}</Text>
+              <Text style={[styles.subPropertyTitle, {color: colors.onSurfaceVariant}]}>
+                {t('reviews.reviewingAs')} {user.fullName ? ` ${user.fullName}` : t('reviews.anonymousUser')}
                 </Text>
+              {user.fullName && (
+                <View style={styles.verifiedBadge}>
+                  <MaterialCommunityIcons name="check-decagram" size={16} color={colors.primary} />
+                  <Text style={[styles.verifiedText, {color: colors.primary}]}>{t('reviews.verifiedTenant')}</Text>
+                </View>
               )}
             </View>
-            {validationErrors.rating && (
-              <HelperText type="error" visible={!!validationErrors.rating}>
-                {validationErrors.rating}
-              </HelperText>
-            )}
-          </Animated.View>
-          
-          {/* Section de commentaire */}
-          <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Partagez votre expérience</Text>
-            <TextInput
-              multiline
-              numberOfLines={6}
-              value={comment}
-              onChangeText={setComment}
-              placeholder="Qu'avez-vous apprécié ? Qu'est-ce qui pourrait être amélioré ?"
-              style={styles.commentInput}
-              mode="outlined"
-              outlineColor={colors.gray[300]}
-              activeOutlineColor={colors.primary}
-              error={!!validationErrors.comment}
-            />
-            {validationErrors.comment && (
-              <HelperText type="error" visible={!!validationErrors.comment}>
-                {validationErrors.comment}
-              </HelperText>
-            )}
-          </Animated.View>
-          
-          {/* Type de séjour */}
-          <Animated.View entering={FadeInUp.delay(300).duration(400)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Type de séjour</Text>
-            <View style={styles.stayTypeContainer}>
-              <Chip
-                selected={stayDuration === 'court terme'}
-                onPress={() => setStayDuration('court terme')}
-                style={[styles.stayTypeChip, stayDuration === 'court terme' && styles.selectedChip]}
-                icon={() => <Ionicons name="bed" size={18} color={stayDuration === 'court terme' ? colors.primary : colors.gray[500]} />}
-              >
-                Court terme
-              </Chip>
-              <Chip
-                selected={stayDuration === 'long terme'}
-                onPress={() => setStayDuration('long terme')}
-                style={[styles.stayTypeChip, stayDuration === 'long terme' && styles.selectedChip]}
-                icon={() => <Ionicons name="home" size={18} color={stayDuration === 'long terme' ? colors.primary : colors.gray[500]} />}
-              >
-                Long terme (1+ mois)
-              </Chip>
+            
+            {/* Rating Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>{t('reviews.yourRating')}</Text>
+              <View style={styles.ratingStarsContainer}>
+                <RatingStars
+                  rating={rating}
+                  size={36}
+                  onRatingChange={handleRatingChange}
+                  color={colors.primary}
+                  precision="full"
+                />
+              </View>
             </View>
-          </Animated.View>
           
-          {/* Option d'évaluation du propriétaire */}
-          <Animated.View entering={FadeInUp.delay(400).duration(400)} style={styles.section}>
-            <View style={styles.ownerReviewHeader}>
-              <Text style={styles.sectionTitle}>Évaluer également le propriétaire ?</Text>
-              <Chip
-                selected={includeOwnerReview}
-                onPress={() => setIncludeOwnerReview(!includeOwnerReview)}
-                style={[styles.toggleChip, includeOwnerReview && styles.selectedChip]}
-              >
-                {includeOwnerReview ? 'Oui' : 'Non'}
-              </Chip>
+            {/* Comment Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>{t('reviews.yourComment')}</Text>
+              <PaperTextInput
+                multiline
+                value={comment}
+                onChangeText={handleCommentChange}
+                placeholder={t('reviews.commentPlaceholder') || ''}
+                style={[styles.commentInput, { backgroundColor: colors.surfaceVariant }]}
+                outlineStyle={styles.textInputOutline}
+                activeOutlineColor={colors.primary}
+                maxLength={MAX_COMMENT_LENGTH}
+                numberOfLines={6}
+              />
+              <View style={styles.charCountContainer}>
+                <HelperText type={validationError ? 'error' : 'info'} visible={true}>
+                  {validationError ? validationError : `${comment.length}/${MAX_COMMENT_LENGTH} ${t('reviews.characters')}`}
+                </HelperText>
+              </View>
             </View>
             
-            {includeOwnerReview && (
-              <Animated.View entering={FadeInUp.duration(300)} style={styles.ownerReviewContainer}>
-                <Text style={styles.ownerName}>Propriétaire: {ownerName}</Text>
-                
-                <View style={styles.ratingContainer}>
-                  <RatingStars
-                    rating={ownerRating}
-                    size={28}
-                    onRatingChange={setOwnerRating}
-                    color="#FFB100"
-                  />
-                </View>
-                
-                {validationErrors.ownerRating && (
-                  <HelperText type="error" visible={!!validationErrors.ownerRating}>
-                    {validationErrors.ownerRating}
-                  </HelperText>
-                )}
-                
-                <TextInput
-                  multiline
-                  numberOfLines={3}
-                  value={ownerFeedback}
-                  onChangeText={setOwnerFeedback}
-                  placeholder="Un commentaire sur le propriétaire ? (optionnel)"
-                  style={styles.ownerInput}
-                  mode="outlined"
-                  outlineColor={colors.gray[300]}
-                  activeOutlineColor={colors.primary}
-                />
-              </Animated.View>
-            )}
+            {/* Submit Button */}
+            <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.buttonContainer}>
+            <Button
+              mode="contained"
+              onPress={handleSubmit}
+              loading={isSubmitting}
+              disabled={isSubmitting}
+                style={[styles.submitButton, { backgroundColor: colors.primary }]}
+                labelStyle={styles.submitButtonText}
+                icon={() => isSubmitting ? <ActivityIndicator color={colors.onPrimary} size="small" /> : <Ionicons name="send" size={18} color={colors.onPrimary} />}
+            >
+                {isSubmitting ? t('reviews.submitting') : t('reviews.sendReview')}
+            </Button>
+            </Animated.View>
           </Animated.View>
-          
-          {/* Espacement pour le bouton fixed */}
-          <View style={{ height: 80 }} />
         </ScrollView>
       </KeyboardAvoidingView>
       
-      {/* Bouton de soumission */}
-      <View style={styles.submitButtonContainer}>
-        <Button
-          mode="contained"
-          onPress={handleSubmit}
-          loading={isSubmitting}
-          disabled={isSubmitting}
-          buttonColor={colors.primary}
-          style={styles.submitButton}
-          contentStyle={styles.submitButtonContent}
-        >
-          Publier mon avis
-        </Button>
-      </View>
-      
-      {/* Message de succès */}
       <Snackbar
-        visible={showSuccess}
-        onDismiss={() => setShowSuccess(false)}
-        duration={2000}
+        visible={showSuccessSnackbar}
+        onDismiss={() => setShowSuccessSnackbar(false)}
+        duration={1800}
+        style={{ backgroundColor: colors.primaryContainer }}
       >
-        Merci pour votre avis ! Il a été publié avec succès.
+        <Text style={{color: colors.onPrimaryContainer}}>{t('reviews.thankYouMessage')}</Text>
       </Snackbar>
     </SafeAreaView>
   );
@@ -288,130 +206,98 @@ const LeaveReviewScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.white,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: spacing[2],
     paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: colors.gray[200],
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+  iconButton: {
+    padding: spacing[2],
+    width: 48,
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: typography.fontSize.lg,
     fontWeight: '600',
-    color: colors.gray[800],
+    textAlign: 'center',
   },
-  headerRight: {
-    width: 40,
-  },
-  scrollView: {
+  keyboardAvoidingView: {
     flex: 1,
   },
-  scrollContent: {
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[6],
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: spacing[4],
   },
-  propertyInfoContainer: {
-    marginBottom: spacing[3],
+  contentContainer: {
+    width: '100%',
+  },
+  propertyInfoCard: {
+    backgroundColor: themeColors.gray[50],
+    borderRadius: borderRadius.md,
+    padding: spacing[3],
+    marginBottom: spacing[4],
+    alignItems: 'center',
+    ...shadows.sm,
   },
   propertyTitle: {
     fontSize: typography.fontSize.lg,
-    fontWeight: '600',
-    color: colors.gray[800],
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: spacing[1],
   },
-  divider: {
-    marginVertical: spacing[3],
+  subPropertyTitle: {
+    fontSize: typography.fontSize.sm,
+    textAlign: 'center',
+    marginBottom: spacing[2],
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeColors.primary + '20',
+    paddingHorizontal: spacing[2],
+  },
+  verifiedText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: 'bold',
+    marginLeft: spacing[1],
   },
   section: {
     marginBottom: spacing[4],
   },
-  sectionTitle: {
-    fontSize: typography.fontSize.base,
-    fontWeight: '500',
-    color: colors.gray[800],
+  sectionLabel: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: 'bold',
     marginBottom: spacing[2],
   },
-  ratingContainer: {
+  ratingStarsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: spacing[2],
-  },
-  ratingText: {
-    marginLeft: spacing[2],
-    fontSize: typography.fontSize.base,
-    color: colors.gray[700],
   },
   commentInput: {
-    backgroundColor: colors.white,
-    fontSize: typography.fontSize.base,
+    height: 120,
+    padding: spacing[2],
   },
-  stayTypeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[2],
+  textInputOutline: {
+    borderWidth: 1,
+    borderColor: themeColors.outline,
   },
-  stayTypeChip: {
-    backgroundColor: colors.gray[100],
+  charCountContainer: {
+    alignItems: 'flex-end',
   },
-  selectedChip: {
-    backgroundColor: `${colors.primary}20`,
-  },
-  toggleChip: {
-    backgroundColor: colors.gray[100],
-  },
-  ownerReviewHeader: {
-    flexDirection: 'row',
+  buttonContainer: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing[2],
-  },
-  ownerReviewContainer: {
-    backgroundColor: colors.gray[50],
-    borderRadius: borderRadius.md,
-    padding: spacing[3],
-    marginTop: spacing[2],
-  },
-  ownerName: {
-    fontSize: typography.fontSize.base,
-    fontWeight: '500',
-    color: colors.gray[700],
-    marginBottom: spacing[2],
-  },
-  ownerInput: {
-    backgroundColor: colors.white,
-    fontSize: typography.fontSize.base,
-    marginTop: spacing[2],
-  },
-  submitButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.white,
-    paddingVertical: spacing[3],
-    paddingHorizontal: spacing[4],
-    borderTopWidth: 1,
-    borderTopColor: colors.gray[200],
   },
   submitButton: {
-    borderRadius: borderRadius.full,
+    padding: spacing[3],
   },
-  submitButtonContent: {
-    paddingVertical: spacing[1.5],
+  submitButtonText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: 'bold',
   },
 });
 

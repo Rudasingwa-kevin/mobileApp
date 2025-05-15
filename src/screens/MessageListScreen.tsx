@@ -16,10 +16,12 @@ import { colors, spacing, typography, shadows } from '../theme';
 import { useMessagesStore } from '../store/messages';
 import ConversationListItem from '../components/ConversationListItem';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 type MessageListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MessagesList'>;
 
 const MessageListScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<MessageListScreenNavigationProp>();
   const { conversations } = useMessagesStore();
   
@@ -27,16 +29,41 @@ const MessageListScreen = () => {
     navigation.navigate('Conversation', { conversationId });
   };
   
-  const sortedConversations = [...conversations].sort(
-    (a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
-  );
+  const sortedConversations = [...conversations].sort((a, b) => {
+    let timeA = 0;
+    if (a.lastMessageAt) {
+      if (a.lastMessageAt instanceof Date) {
+        timeA = a.lastMessageAt.getTime();
+      } else if (typeof a.lastMessageAt === 'string') {
+        timeA = new Date(a.lastMessageAt).getTime();
+      } else if (typeof a.lastMessageAt === 'number') { // Handle if it's already a timestamp
+        timeA = a.lastMessageAt;
+      }
+    }
+
+    let timeB = 0;
+    if (b.lastMessageAt) {
+      if (b.lastMessageAt instanceof Date) {
+        timeB = b.lastMessageAt.getTime();
+      } else if (typeof b.lastMessageAt === 'string') {
+        timeB = new Date(b.lastMessageAt).getTime();
+      } else if (typeof b.lastMessageAt === 'number') { // Handle if it's already a timestamp
+        timeB = b.lastMessageAt;
+      }
+    }
+    // Fallback for NaN times from invalid date strings
+    if (isNaN(timeA)) timeA = 0;
+    if (isNaN(timeB)) timeB = 0;
+
+    return timeB - timeA;
+  });
   
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="chatbubble-ellipses-outline" size={60} color={colors.gray[300]} />
-      <Text style={styles.emptyTitle}>Aucun message</Text>
+      <Text style={styles.emptyTitle}>{t('messages.noMessages')}</Text>
       <Text style={styles.emptyText}>
-        Commencez à explorer des logements et contactez les propriétaires pour débuter une conversation.
+        {t('messages.startConversation')}
       </Text>
     </View>
   );
@@ -46,7 +73,7 @@ const MessageListScreen = () => {
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       
       <View style={styles.header}>
-        <Text style={styles.title}>Messages</Text>
+        <Text style={styles.title}>{t('messages.title')}</Text>
         <TouchableOpacity style={styles.searchButton}>
           <Ionicons name="search" size={22} color={colors.gray[800]} />
         </TouchableOpacity>

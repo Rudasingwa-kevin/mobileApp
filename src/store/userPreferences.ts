@@ -10,6 +10,7 @@ export interface UserPreferences {
   currency: Currency;
   isLoggedIn: boolean;
   authProvider?: 'google' | 'facebook' | 'manual';
+  hasCompletedOnboarding: boolean;
 }
 
 interface UserPreferencesState {
@@ -24,6 +25,7 @@ const defaultPreferences: UserPreferences = {
   language: 'fr',
   currency: 'USD',
   isLoggedIn: false,
+  hasCompletedOnboarding: false,
 };
 
 export const useUserPreferences = create<UserPreferencesState>((set) => ({

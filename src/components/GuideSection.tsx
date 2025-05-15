@@ -5,12 +5,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../theme';
 import { Guide, GuideCategory } from '../types';
 import GuideCard from './GuideCard';
+import { useTranslation } from 'react-i18next';
 
 interface GuideSectionProps {
   category: GuideCategory;
   guides: Guide[];
   style?: object;
   onSeeAllPress?: () => void;
+  categoryTitle?: string;
+  seeAllText?: string;
 }
 
 const GuideSection: React.FC<GuideSectionProps> = ({
@@ -18,7 +21,11 @@ const GuideSection: React.FC<GuideSectionProps> = ({
   guides,
   style,
   onSeeAllPress,
+  categoryTitle,
+  seeAllText,
 }) => {
+  const { t } = useTranslation();
+  
   if (!guides || guides.length === 0) {
     return null;
   }
@@ -29,7 +36,7 @@ const GuideSection: React.FC<GuideSectionProps> = ({
       <View style={styles.header}>
         <View style={styles.titleContainer}>
           <Ionicons name={category.icon as any} size={22} color={colors.primary} />
-          <Text style={styles.title}>{category.title}</Text>
+          <Text style={styles.title}>{categoryTitle || category.title}</Text>
         </View>
         
         {/* Bouton "Voir tout" si plus de 3 guides dans la catégorie */}
@@ -38,7 +45,7 @@ const GuideSection: React.FC<GuideSectionProps> = ({
             onPress={onSeeAllPress}
             style={styles.seeAllButton}
           >
-            <Text style={styles.seeAllText}>Voir tout</Text>
+            <Text style={styles.seeAllText}>{seeAllText || t('common.seeAll')}</Text>
             <Ionicons name="chevron-forward" size={16} color={colors.primary} />
           </TouchableOpacity>
         )}

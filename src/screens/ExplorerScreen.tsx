@@ -1,394 +1,554 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   StyleSheet, 
   View, 
-  ScrollView, 
   FlatList, 
-  Text, 
   TouchableOpacity, 
   StatusBar,
-  ImageBackground,
-  Animated as RNAnimated,
   SafeAreaView,
+  Dimensions,
   Platform,
-  Image
+  RefreshControl,
+  ScrollView,
+  Image,
+  TextInput,
+  ImageBackground,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {
+  Text,
+  useTheme,
+  ActivityIndicator,
+  Button,
+  Card,
+  Avatar,
+  Divider,
+  IconButton,
+} from 'react-native-paper';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { colors, spacing, typography, borderRadius, shadows } from '../theme';
-import { SegmentedButtons } from 'react-native-paper';
-
-// Components
-import SearchBar from '../components/SearchBar';
-import CategoryButton from '../components/CategoryButton';
-import SectionTitle from '../components/SectionTitle';
-import GridListingCard from '../components/GridListingCard';
-import EditorialCard from '../components/EditorialCard';
-
-// Types
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { RootStackParamList } from '../types';
+import { Property } from '../types/index';
+import SearchFiltersModal from '../components/SearchFiltersModal';
+import { useSearchStore, SearchFilters } from '../store/search';
+import { useSavedStore } from '../store/saved';
+import { useUserStore } from '../store/user';
+import { usePreferences } from '../store/preferences';
+import { useTranslation } from 'react-i18next';
+import Animated, {
+  FadeInUp,
+  FadeIn,
+  FadeInRight,
+  SlideInUp,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  interpolate,
+  Extrapolate,
+} from 'react-native-reanimated';
 
-// Data & State
-import { exploreCategories, exploreListings, editorialSections } from '../data/exploreListings';
-import { useExploreFilters } from '../store/exploreFilters';
+const { width } = Dimensions.get('window');
+const NUM_COLUMNS_THRESHOLD = 700;
+const SEARCH_BAR_HEIGHT = 60;
 
-type ExplorerScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+// Définition des catégories personnalisées
+const CUSTOM_CATEGORIES = [
+  {
+    id: 'all',
+    labelKey: 'explore.categories.all',
+    icon: 'explore',
+    color: '#FF5A5F',
+  },
+  {
+    id: 'lake_view',
+    labelKey: 'explore.categories.lake',
+    icon: 'water',
+    color: '#FF5A5F',
+    amenityFilter: ['Vue sur le lac', 'Lakefront']
+  },
+  {
+    id: 'student',
+    labelKey: 'explore.categories.student',
+    icon: 'school',
+    color: '#FF5A5F',
+    amenityFilter: ['Pour étudiants', 'Student housing']
+  },
+  {
+    id: 'furnished',
+    labelKey: 'explore.categories.furnished',
+    icon: 'chair',
+    color: '#FF5A5F',
+    amenityFilter: ['Meublé', 'Furnished']
+  },
+  {
+    id: 'longTerm',
+    labelKey: 'explore.categories.longTerm',
+    icon: 'event-available',
+    color: '#FF5A5F',
+    amenityFilter: ['Long séjour', 'Long term']
+  },
+  {
+    id: 'villa',
+    labelKey: 'explore.categories.villas',
+    icon: 'villa',
+    color: '#FF5A5F',
+    propertyType: 'villa'
+  },
+  {
+    id: 'appartement',
+    labelKey: 'explore.categories.apartments',
+    icon: 'apartment',
+    color: '#FF5A5F',
+    propertyType: 'appartement'
+  },
+  {
+    id: 'new',
+    labelKey: 'explore.categories.new',
+    icon: 'fiber-new',
+    color: '#FF5A5F',
+    isNew: true
+  }
+];
 
-const HEADER_MAX_HEIGHT = 350;
-const HEADER_MIN_HEIGHT = Platform.OS === 'ios' ? 90 : 60;
-const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+// Guides locaux mockés
+const LOCAL_GUIDES = [
+  {
+    id: '1',
+    title: 'Transport à Gisenyi',
+    description: 'Comment se déplacer facilement dans la ville',
+    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80',
+    icon: 'directions-bus'
+  },
+  {
+    id: '2',
+    title: 'Les quartiers de Gisenyi',
+    description: 'Guide des différents quartiers et leurs caractéristiques',
+    image: 'https://images.unsplash.com/photo-1580223530509-849e0b42a99a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80',
+    icon: 'place'
+  },
+  {
+    id: '3',
+    title: 'Activités au bord du lac',
+    description: 'Découvrez toutes les activités autour du lac Kivu',
+    image: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80',
+    icon: 'beach-access'
+  }
+];
 
 const ExplorerScreen = () => {
-  const navigation = useNavigation<ExplorerScreenNavigationProp>();
-  const scrollY = useRef(new RNAnimated.Value(0)).current;
-  const scrollViewRef = useRef<ScrollView>(null);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [priceDisplayMode, setPriceDisplayMode] = useState<'nightly' | 'monthly'>('monthly');
+  const theme = useTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
+  const { isSaved } = useSavedStore();
+  const { user } = useUserStore();
+  const { currency } = usePreferences();
   
-  // Filters state
-  const { filters, setSelectedCategory } = useExploreFilters();
+  const {
+    listings,
+    filteredListings,
+    isLoading,
+    filters,
+    showFiltersModal,
+    fetchListings,
+    setQuery,
+    setFilters,
+    applyFilters,
+    resetFilters,
+    toggleFiltersModal,
+  } = useSearchStore();
+
+  const [numColumns, setNumColumns] = useState(width > NUM_COLUMNS_THRESHOLD ? 2 : 1);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [searchText, setSearchText] = useState('');
   
-  // Header animations
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE],
-    outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
-    extrapolate: 'clamp',
+  // Animation values for scroll-based effects
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  // Animated style for the sticky search header
+  const searchBarAnimatedStyle = useAnimatedStyle(() => {
+    const elevation = interpolate(
+      scrollY.value,
+      [0, 10],
+      [0, 4],
+      Extrapolate.CLAMP
+    );
+
+    return {
+      zIndex: 1000,
+      elevation: elevation,
+      shadowOpacity: elevation * 0.1,
+      shadowOffset: { width: 0, height: elevation * 0.5 },
+    };
   });
   
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [1, 0.5, 0],
-    extrapolate: 'clamp',
-  });
-  
-  const searchBarOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [0, 0.5, 1],
-    extrapolate: 'clamp',
-  });
-  
-  // Handle category selection
-  const handleCategoryPress = (categoryId: string) => {
-    setSelectedCategory(filters.selectedCategory === categoryId ? null : categoryId);
+  const handleFetchListings = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    await fetchListings();
+    if (isRefresh) setRefreshing(false);
+  }, [fetchListings]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (listings.length === 0) {
+        handleFetchListings();
+      }
+      setNumColumns(Dimensions.get('window').width > NUM_COLUMNS_THRESHOLD ? 2 : 1);
+    }, [listings.length, handleFetchListings])
+  );
+
+  // Update numColumns on dimension change
+  useEffect(() => {
+    const updateLayout = () => {
+      setNumColumns(Dimensions.get('window').width > NUM_COLUMNS_THRESHOLD ? 2 : 1);
+    };
+    const subscription = Dimensions.addEventListener('change', updateLayout);
+    return () => subscription?.remove();
+  }, []);
+
+  const handleSearch = () => {
+    setQuery(searchText);
+    setActiveCategory('all');
   };
 
-  // Handle property card press
-  const handlePropertyPress = (propertyId: string) => {
-    navigation.navigate('PropertyDetails', { propertyId });
+  const handleCategoryPress = (categoryId: string) => {
+    setActiveCategory(categoryId);
+    
+    const category = CUSTOM_CATEGORIES.find(cat => cat.id === categoryId);
+    
+    if (categoryId === 'all') {
+      // Reset filters but keep the search query if any
+      const newFilters: Partial<SearchFilters> = { 
+        ...filters, 
+        propertyType: undefined,
+        amenities: undefined
+      };
+      setFilters(newFilters);
+    } else if (category?.amenityFilter) {
+      // Filter by amenities
+      setFilters({ 
+        ...filters, 
+        amenities: category.amenityFilter
+      });
+    } else if (category?.propertyType) {
+      // Filter by property type
+      setFilters({
+        ...filters,
+        propertyType: [category.propertyType]
+      });
+    } else if (category?.isNew) {
+      // Filter for 'new' properties (added in the last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      // Apply a custom filter for new properties
+      // Since our SearchFilters doesn't have dateAddedAfter directly, 
+      // we'll filter the listings after applying other filters
+      setFilters({
+        ...filters,
+        // We'll handle the date filter in the rendering
+      });
+    }
+    
+    applyFilters();
   };
   
-  // Handle search bar press
-  const handleSearchPress = () => {
-    navigation.navigate('Search');
+  const onResetFilters = () => {
+    resetFilters();
+    setActiveCategory('all');
+    setSearchText('');
+  };
+
+  // Currency formatter
+  const formatCurrency = (price: number, currency: string) => {
+    switch (currency) {
+      case 'USD':
+        return `$${price}`;
+      case 'EUR':
+        return `€${price}`;
+      default:
+        return `${price.toLocaleString()} RWF`;
+    }
   };
   
-  // Handle editorial card press
-  const handleEditorialPress = (type: string) => {
-    // TODO: Navigate to appropriate screen based on type
-    console.log(`Navigate to ${type} screen`);
+  // Render functions
+  const renderGuideCard = ({ item, index }: { item: typeof LOCAL_GUIDES[0]; index: number }) => (
+    <Animated.View
+      entering={FadeInUp.delay(200 + index * 100).duration(400)}
+      style={styles.guideCardContainer}
+    >
+      <TouchableOpacity
+        style={styles.guideCard}
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('LocalGuide')}
+      >
+        <Image source={{ uri: item.image }} style={styles.guideImage} />
+        <View style={styles.guideContentOverlay}>
+          <View style={styles.guideIconContainer}>
+            <MaterialIcons name={item.icon as any} size={24} color="#FFFFFF" />
+          </View>
+          <View style={styles.guideContent}>
+            <Text style={styles.guideTitle}>{item.title}</Text>
+            <Text style={styles.guideDescription} numberOfLines={2}>
+              {item.description}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+
+  const renderCategoryItem = ({ item, index }: { item: typeof CUSTOM_CATEGORIES[0]; index: number }) => (
+    <Animated.View 
+      entering={FadeInRight.delay(index * 30).duration(300)}
+      style={styles.categoryItem}
+    >
+      <TouchableOpacity
+        onPress={() => handleCategoryPress(item.id)}
+        style={[
+          styles.categoryButton,
+          activeCategory === item.id && styles.activeCategoryButton,
+        ]}
+      >
+        <MaterialIcons 
+          name={item.icon as any} 
+          size={20} 
+          color={activeCategory === item.id ? "#FFFFFF" : "#222222"} 
+        />
+      </TouchableOpacity>
+      <Text 
+        style={[
+          styles.categoryLabel,
+          activeCategory === item.id && styles.activeCategoryLabel
+        ]}
+        numberOfLines={1}
+      >
+        {t(item.labelKey)}
+      </Text>
+    </Animated.View>
+  );
+
+  const renderPropertyCard = ({ item, index }: { item: Property; index: number }) => {
+    const isPropertySaved = isSaved(item.id);
+    const isNew = new Date(item.createdAt).getTime() > Date.now() - (30 * 24 * 60 * 60 * 1000);
+    
+    return (
+      <Animated.View 
+        entering={FadeInUp.delay(index * 50).duration(300)}
+        style={[
+          styles.cardWrapper, 
+          { width: numColumns === 1 ? '100%' : '50%' }
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate('PropertyDetails', { propertyId: item.id })}
+          style={styles.propertyCard}
+        >
+          <View style={styles.imageContainer}>
+            <Image 
+              source={{ uri: Array.isArray(item.images) && item.images.length > 0 ? 
+                item.images[0] : 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80' 
+              }} 
+              style={styles.propertyImage} 
+              resizeMode="cover" 
+            />
+            <TouchableOpacity style={styles.favoriteButton}>
+              <MaterialIcons 
+                name={isPropertySaved ? "favorite" : "favorite-border"} 
+                size={22} 
+                color={isPropertySaved ? "#FF5A5F" : "white"} 
+              />
+            </TouchableOpacity>
+            {isNew && (
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>{t('common.new')}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.propertyInfo}>
+            <View style={styles.ratingRow}>
+              <Text style={styles.locationText}>
+                {item.location.district || item.location.city}
+              </Text>
+              {item.rating && (
+                <View style={styles.ratingContainer}>
+                  <MaterialIcons name="star" size={16} color="#222222" />
+                  <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+                </View>
+              )}
+            </View>
+            
+            <Text style={styles.titleText} numberOfLines={1}>{item.title}</Text>
+            
+            <Text style={styles.detailsText}>
+              {item.bedrooms} {t('property.bedrooms')} · {item.bathrooms} {t('property.bathrooms')}
+              {item.size ? ` · ${item.size}m²` : ''}
+            </Text>
+            
+            <View style={styles.priceContainer}>
+              <Text style={styles.priceText}>
+                <Text style={styles.priceBold}>
+                  {formatCurrency(item.price, item.currency)}
+                </Text>
+                <Text style={styles.priceUnit}> / {t('property.perMonth')}</Text>
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
   };
-  
-  // Scroll to top handler
-  const handleScrollToTop = () => {
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-  };
-  
-  // Filter listings based on selected category
-  const filteredListings = filters.selectedCategory
-    ? exploreListings.filter(listing => {
-        switch (filters.selectedCategory) {
-          case 'lake':
-            return listing.nearLake;
-          case 'furnished':
-            return listing.furnished;
-          case 'affordable':
-            return listing.affordable;
-          case 'longTerm':
-            return listing.longTerm;
-          case 'students':
-            return listing.forStudents;
-          case 'new':
-            return true; // Assume all listings in our mock data are "new"
-          default:
-            return true;
-        }
-      })
-    : exploreListings;
-  
-  // Featured listings
-  const featuredListings = exploreListings.filter(listing => listing.featured);
-  
-  // Logements longue durée
-  const longTermListings = exploreListings.filter(listing => listing.longTerm);
-  
-  // Logements pour étudiants
-  const studentListings = exploreListings.filter(listing => listing.forStudents);
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Animated.View entering={FadeIn.duration(400)} style={styles.emptyContent}>
+        <MaterialIcons name="search-off" size={56} color="#666666" />
+        <Text style={styles.emptyTitle}>{t('explore.noResults')}</Text>
+        <Text style={styles.emptySubtitle}>{t('explore.tryDifferent')}</Text>
+        <Button 
+          mode="contained" 
+          onPress={onResetFilters} 
+          style={styles.resetButton}
+          buttonColor="#FF5A5F"
+        >
+          {t('explore.resetFilters')}
+        </Button>
+      </Animated.View>
+    </View>
+  );
+
+  // Filter new items if the "new" category is selected
+  const displayedListings = activeCategory === 'new' 
+    ? filteredListings.filter(
+        item => new Date(item.createdAt).getTime() > Date.now() - (30 * 24 * 60 * 60 * 1000)
+      )
+    : filteredListings;
   
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar 
-        barStyle="light-content" 
-        backgroundColor="transparent" 
-        translucent 
-      />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* Fixed search bar that shows on scroll */}
-      <RNAnimated.View 
-        style={[
-          styles.fixedSearchContainer, 
-          { opacity: searchBarOpacity }
-        ]}
-      >
-        <SearchBar onPress={handleSearchPress} />
-      </RNAnimated.View>
-      
-      {/* Header with background image */}
-      <RNAnimated.View style={[styles.header, { height: headerHeight }]}>
-        <ImageBackground
-          source={{ uri: 'https://a0.muscache.com/im/pictures/e25a9b25-fa98-4160-bfd1-039287bf38b6.jpg' }}
-          style={styles.headerImage}
+      {/* Sticky Search Bar */}
+      <Animated.View style={[styles.searchBarContainer, searchBarAnimatedStyle]}>
+        <TouchableOpacity 
+          style={styles.searchBar}
+          activeOpacity={0.9}
+          onPress={() => toggleFiltersModal()}
         >
-          <RNAnimated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
-            <Text style={styles.headerTitle}>Trouvez votre logement à Gisenyi</Text>
-            <Text style={styles.headerSubtitle}>Court séjour ou résidence longue durée</Text>
-            <TouchableOpacity style={styles.headerButton}>
-              <Text style={styles.headerButtonText}>Explorer</Text>
+          <MaterialIcons name="search" size={24} color="#222222" style={styles.searchIcon} />
+          <Text style={styles.searchPlaceholder}>{t('explore.searchPlaceholder')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.filterButton}
+          onPress={toggleFiltersModal}
+        >
+          <MaterialIcons name="tune" size={24} color="#222222" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.filterButton}
+          onPress={() => navigation.navigate('MapScreen')}
+        >
+          <MaterialIcons name="map" size={24} color="#222222" />
             </TouchableOpacity>
-          </RNAnimated.View>
-        </ImageBackground>
-      </RNAnimated.View>
+      </Animated.View>
       
-      {/* Main content */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.scrollView}
+      {/* Main Content */}
+      <Animated.ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
-        onScroll={RNAnimated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { 
-            useNativeDriver: false,
-            listener: (event) => {
-              const offsetY = event.nativeEvent.contentOffset.y;
-              setShowScrollTop(offsetY > HEADER_SCROLL_DISTANCE * 2);
-            }
-          }
-        )}
-      >
-        {/* Search bar (visible at top of content) */}
-        <View style={styles.searchContainer}>
-          <SearchBar onPress={handleSearchPress} />
-        </View>
-        
-        {/* Prix par nuit ou par mois */}
-        <Animated.View 
-          entering={FadeIn.duration(400)}
-          style={styles.priceToggleContainer}
-        >
-          <Text style={styles.priceToggleLabel}>Affichage des prix :</Text>
-          <SegmentedButtons
-            value={priceDisplayMode}
-            onValueChange={(value) => setPriceDisplayMode(value as 'nightly' | 'monthly')}
-            buttons={[
-              { value: 'nightly', label: 'Par nuit', key: 'nightly' },
-              { value: 'monthly', label: 'Par mois', key: 'monthly' }
-            ]}
-            style={styles.segmentedButtons}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => handleFetchListings(true)}
+            colors={["#FF5A5F"]}
+            tintColor={"#FF5A5F"}
           />
-        </Animated.View>
-        
+        }
+      >
         {/* Categories section */}
-        <Animated.View 
-          entering={FadeIn.duration(400)}
-          style={styles.categoriesContainer}
-        >
+        <View style={styles.categoriesSection}>
           <FlatList
-            data={exploreCategories}
-            renderItem={({ item, index }) => (
-              <CategoryButton
-                category={item}
-                isSelected={filters.selectedCategory === item.id}
-                onPress={handleCategoryPress}
-                index={index}
-              />
-            )}
+            data={CUSTOM_CATEGORIES}
+            renderItem={renderCategoryItem}
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesList}
           />
-        </Animated.View>
+        </View>
         
-        {/* Featured properties section */}
-        <Animated.View 
-          entering={FadeInUp.delay(200).duration(400)}
-          style={styles.section}
-        >
-          <SectionTitle 
-            title="À découvrir à Gisenyi" 
-            subtitle={priceDisplayMode === 'monthly' 
-              ? "Logements de qualité à prix mensuel" 
-              : "Découvrez les meilleurs logements disponibles"}
-            actionText="Voir tout"
-            onActionPress={() => navigation.navigate('Search')}
-          />
-          
-          {filteredListings.length > 0 ? (
-            <View style={styles.gridContainer}>
-              {filteredListings.map((listing, index) => (
-                <GridListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onPress={handlePropertyPress}
-                  index={index}
-                  displayMode={priceDisplayMode}
-                />
-              ))}
+        {/* Results Count */}
+        <View style={styles.resultsCountContainer}>
+          <Text style={styles.resultsCount}>
+            {displayedListings.length} {t('explore.results')}
+          </Text>
+        </View>
+        
+        {/* Properties section */}
+        <View style={styles.propertiesSection}>
+          {isLoading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#FF5A5F" />
             </View>
+          ) : displayedListings.length === 0 ? (
+            renderEmptyState()
           ) : (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="alert-circle-outline" size={48} color={colors.gray[400]} />
-              <Text style={styles.emptyText}>
-                Aucun logement ne correspond à cette catégorie
-              </Text>
-              <TouchableOpacity 
-                style={styles.resetButton}
-                onPress={() => setSelectedCategory(null)}
-              >
-                <Text style={styles.resetButtonText}>Réinitialiser les filtres</Text>
-              </TouchableOpacity>
+            <View style={styles.propertiesGrid}>
+              {displayedListings.map((item, index) => (
+                renderPropertyCard({ item, index })
+              ))}
             </View>
           )}
-        </Animated.View>
+        </View>
         
-        {/* Longue durée section */}
-        {!filters.selectedCategory && longTermListings.length > 0 && (
-          <Animated.View 
-            entering={FadeInUp.delay(250).duration(400)}
-            style={styles.section}
-          >
-            <SectionTitle 
-              title="Locations longue durée" 
-              subtitle="Parfait pour les expatriés et résidents"
-              actionText="Voir tout"
-              onActionPress={() => setSelectedCategory('longTerm')}
-            />
-            
-            <View style={styles.gridContainer}>
-              {longTermListings.slice(0, 4).map((listing, index) => (
-                <GridListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onPress={handlePropertyPress}
-                  index={index}
-                  displayMode="monthly"
-                />
-              ))}
-            </View>
-            
-            {longTermListings.length > 4 && (
-              <TouchableOpacity 
-                style={styles.viewMoreButton}
-                onPress={() => setSelectedCategory('longTerm')}
-              >
-                <Text style={styles.viewMoreText}>Voir plus de logements longue durée</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
-              </TouchableOpacity>
-            )}
-          </Animated.View>
-        )}
-        
-        {/* Étudiants section */}
-        {!filters.selectedCategory && studentListings.length > 0 && (
-          <Animated.View 
-            entering={FadeInUp.delay(300).duration(400)}
-            style={styles.section}
-          >
-            <SectionTitle 
-              title="Logements pour étudiants" 
-              subtitle="Options économiques près du campus"
-              actionText="Voir tout"
-              onActionPress={() => setSelectedCategory('students')}
-            />
-            
-            <View style={styles.gridContainer}>
-              {studentListings.slice(0, 4).map((listing, index) => (
-                <GridListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onPress={handlePropertyPress}
-                  index={index}
-                  displayMode="monthly"
-                />
-              ))}
-            </View>
-          </Animated.View>
-        )}
-        
-        {/* Map preview section */}
-        <Animated.View
-          entering={FadeInUp.delay(350).duration(400)}
-          style={styles.section}
-        >
-          <SectionTitle 
-            title="Explorer sur la carte" 
-            subtitle="Découvrez les logements par quartier"
-          />
+        {/* Local Guides Section */}
+        <View style={styles.guidesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('explore.localGuidesTitle')}</Text>
+            <TouchableOpacity 
+              style={styles.viewAllButton}
+              onPress={() => navigation.navigate('LocalGuide')}
+            >
+              <Text style={styles.viewAllText}>{t('explore.viewAll')}</Text>
+              <MaterialIcons name="arrow-forward" size={16} color="#FF5A5F" />
+            </TouchableOpacity>
+          </View>
           
-          <TouchableOpacity 
-            style={styles.mapPreviewContainer}
-            onPress={() => navigation.navigate('MapScreen')}
-            activeOpacity={0.9}
-          >
-            <Image
-              source={{ uri: 'https://a0.muscache.com/im/pictures/f0862a09-cb75-4e9d-9aed-58ae728b2f74.jpg' }}
-              style={styles.mapPreview}
-              resizeMode="cover"
-            />
-            <View style={styles.mapButtonContainer}>
-              <TouchableOpacity style={styles.mapButton}>
-                <Ionicons name="map-outline" size={20} color={colors.gray[800]} />
-                <Text style={styles.mapButtonText}>Afficher sur la carte</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
-        
-        {/* Editorial section */}
-        <Animated.View
-          entering={FadeInUp.delay(400).duration(400)}
-          style={styles.section}
-        >
-          <SectionTitle 
-            title="Guides et informations pratiques"
-            subtitle="Conseils pour bien vivre et s'installer à Gisenyi"
-          />
+          <Text style={styles.sectionSubtitle}>{t('explore.localGuidesSubtitle')}</Text>
           
-          {editorialSections.map((section, index) => (
-            <EditorialCard
-              key={section.id}
-              title={section.title}
-              description={section.description}
-              image={section.image}
-              onPress={() => handleEditorialPress(section.type)}
-              index={index}
-            />
-          ))}
-        </Animated.View>
-      </ScrollView>
+          <View style={styles.guidesList}>
+            {LOCAL_GUIDES.map((guide, index) => renderGuideCard({ item: guide, index }))}
+          </View>
+        </View>
+      </Animated.ScrollView>
       
-      {/* Scroll to top button */}
-      {showScrollTop && (
-        <TouchableOpacity 
-          style={styles.scrollTopButton}
-          onPress={handleScrollToTop}
-        >
-          <Ionicons name="chevron-up" size={24} color={colors.gray[800]} />
-        </TouchableOpacity>
-      )}
+      {/* Map Floating Button */}
+      <TouchableOpacity
+        style={styles.mapButton}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('MapScreen')}
+      >
+        <View style={styles.mapButtonInner}>
+          <MaterialIcons name="map" size={20} color="#FFFFFF" />
+          <Text style={styles.mapButtonText}>{t('map.title')}</Text>
+        </View>
+      </TouchableOpacity>
+      
+      {/* Filters Modal */}
+      <SearchFiltersModal
+        visible={showFiltersModal}
+        onDismiss={toggleFiltersModal}
+      />
     </SafeAreaView>
   );
 };
@@ -396,184 +556,324 @@ const ExplorerScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
   },
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    overflow: 'hidden',
-    zIndex: 1,
-  },
-  headerImage: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing[4],
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    width: '100%',
-    height: '100%',
-  },
-  headerTitle: {
-    fontSize: typography.fontSize.xl2,
-    fontWeight: '700',
-    color: colors.white,
-    textAlign: 'center',
-    marginBottom: spacing[2],
-  },
-  headerSubtitle: {
-    fontSize: typography.fontSize.lg,
-    color: colors.white,
-    textAlign: 'center',
-    marginBottom: spacing[4],
-  },
-  headerButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing[2],
-    paddingHorizontal: spacing[4],
-    borderRadius: borderRadius.full,
-  },
-  headerButtonText: {
-    color: colors.white,
-    fontSize: typography.fontSize.base,
-    fontWeight: '600',
-  },
-  fixedSearchContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingTop: Platform.OS === 'ios' ? 45 : 30,
-    zIndex: 10,
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  scrollContent: {
-    paddingTop: HEADER_MAX_HEIGHT,
-    paddingBottom: spacing[6],
-  },
-  searchContainer: {
-    marginTop: -spacing[8],
-    marginBottom: spacing[2],
-  },
-  priceToggleContainer: {
+  searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingHorizontal: spacing[4],
-    marginBottom: spacing[2],
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  priceToggleLabel: {
-    fontSize: typography.fontSize.sm,
-    color: colors.gray[700],
-    marginRight: spacing[2],
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: SEARCH_BAR_HEIGHT - 16,
+    backgroundColor: '#F7F7F7',
+    borderRadius: 30,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#EBEBEB',
   },
-  segmentedButtons: {
-    maxWidth: 220,
-    backgroundColor: colors.white,
+  searchIcon: {
+    marginRight: 8,
   },
-  categoriesContainer: {
-    marginVertical: spacing[2],
+  searchPlaceholder: {
+    color: '#717171',
+    fontSize: 15,
+  },
+  filterButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  container: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 80,
+  },
+  categoriesSection: {
+    marginVertical: 8,
   },
   categoriesList: {
-    paddingHorizontal: spacing[4],
+    paddingHorizontal: 20,
   },
-  section: {
-    marginTop: spacing[6],
+  categoryItem: {
+    alignItems: 'center',
+    width: 70,
+    marginRight: 16,
   },
-  gridContainer: {
+  categoryButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: '#F7F7F7',
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+  },
+  activeCategoryButton: {
+    backgroundColor: '#FF5A5F',
+    borderColor: '#FF5A5F',
+  },
+  categoryLabel: {
+    fontSize: 12,
+    color: '#717171',
+    textAlign: 'center',
+  },
+  activeCategoryLabel: {
+    color: '#FF5A5F',
+    fontWeight: 'bold',
+  },
+  resultsCountContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  resultsCount: {
+    fontSize: 14,
+    color: '#717171',
+  },
+  propertiesSection: {
+    paddingHorizontal: 20,
+  },
+  propertiesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing[4],
+    marginHorizontal: -8,
   },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: spacing[6],
+  cardWrapper: {
+    paddingHorizontal: 8,
+    marginBottom: 24,
   },
-  emptyText: {
-    fontSize: typography.fontSize.base,
-    color: colors.gray[600],
-    textAlign: 'center',
-    marginTop: spacing[2],
-    marginBottom: spacing[4],
-  },
-  resetButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing[2],
-    paddingHorizontal: spacing[4],
-    borderRadius: borderRadius.full,
-  },
-  resetButtonText: {
-    color: colors.white,
-    fontSize: typography.fontSize.sm,
-    fontWeight: '500',
-  },
-  viewMoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing[3],
-    marginTop: spacing[2],
-  },
-  viewMoreText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.primary,
-    fontWeight: '500',
-    marginRight: spacing[1],
-  },
-  mapPreviewContainer: {
-    marginHorizontal: spacing[4],
-    borderRadius: borderRadius.lg,
+  propertyCard: {
     overflow: 'hidden',
-    height: 200,
-    ...shadows.md,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
   },
-  mapPreview: {
+  imageContainer: {
+    position: 'relative',
+    height: 200,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  propertyImage: {
     width: '100%',
     height: '100%',
   },
-  mapButtonContainer: {
+  favoriteButton: {
     position: 'absolute',
-    bottom: spacing[4],
-    left: 0,
-    right: 0,
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  mapButton: {
+  badgeContainer: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: '#FF5A5F',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  propertyInfo: {
+    padding: 12,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  locationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#222222',
+  },
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    paddingVertical: spacing[2],
-    paddingHorizontal: spacing[4],
-    borderRadius: borderRadius.full,
-    ...shadows.md,
   },
-  mapButtonText: {
-    fontSize: typography.fontSize.base,
+  ratingText: {
+    fontSize: 14,
     fontWeight: '500',
-    color: colors.gray[800],
-    marginLeft: spacing[1],
+    color: '#222222',
+    marginLeft: 4,
   },
-  scrollTopButton: {
+  titleText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#222222',
+    marginBottom: 4,
+  },
+  detailsText: {
+    fontSize: 14,
+    color: '#717171',
+  },
+  priceContainer: {
+    marginTop: 8,
+  },
+  priceText: {
+    fontSize: 15,
+  },
+  priceBold: {
+    fontWeight: 'bold',
+    color: '#222222',
+  },
+  priceUnit: {
+    fontWeight: 'normal',
+    color: '#717171',
+  },
+  guidesSection: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    backgroundColor: '#F8F8F8',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#222222',
+  },
+  sectionSubtitle: {
+    fontSize: 16,
+    color: '#717171',
+    marginBottom: 16,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#FF5A5F',
+    marginRight: 4,
+  },
+  guidesList: {
+    marginTop: 16,
+  },
+  guideCardContainer: {
+    marginBottom: 16,
+  },
+  guideCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    height: 180,
+  },
+  guideImage: {
+    width: '100%',
+    height: '100%',
+  },
+  guideContentOverlay: {
     position: 'absolute',
-    bottom: spacing[6],
-    right: spacing[4],
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  guideIconContainer: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.white,
+    backgroundColor: '#FF5A5F',
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.lg,
+    marginRight: 16,
   },
+  guideContent: {
+    flex: 1,
+  },
+  guideTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  guideDescription: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    opacity: 0.8,
+  },
+  emptyContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyContent: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#222222',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    color: '#717171',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  resetButton: {
+    borderRadius: 8,
+  },
+  loaderContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  mapButton: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    borderRadius: 30,
+    backgroundColor: '#222222',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  mapButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  mapButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
+    marginLeft: 8,
+  }
 });
 
 export default ExplorerScreen; 

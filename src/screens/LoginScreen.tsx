@@ -8,21 +8,24 @@ import {
   ScrollView,
   SafeAreaView,
   Pressable,
+  Image,
 } from 'react-native';
-import { Text, Button, TouchableRipple } from 'react-native-paper';
+import { Text, Button, TouchableRipple, TextInput, HelperText } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../navigation/AuthNavigator';
 import { Ionicons } from '@expo/vector-icons';
 import { useUserActions } from '../store/user';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, spacing, typography, shadows, borderRadius } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
 const LoginScreen = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const { login } = useUserActions();
+  const { t } = useTranslation();
   
   // État local pour les erreurs
   const [loading, setLoading] = useState(false);
@@ -44,7 +47,7 @@ const LoginScreen = () => {
         authProvider: 'manual'
       });
     } catch (err) {
-      setError('Erreur lors de la connexion');
+      setError(t('errors.invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +66,7 @@ const LoginScreen = () => {
           >
             <Ionicons name="close" size={24} color={colors.gray[800]} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Connexion ou inscription</Text>
+          <Text style={styles.headerTitle}>{t('auth.login')}</Text>
         </View>
         
         <ScrollView 
@@ -73,46 +76,45 @@ const LoginScreen = () => {
           <View style={styles.formContainer}>
             {/* Sélecteur de pays/région */}
             <Animated.View 
-              entering={FadeIn.duration(300)} 
+              entering={FadeInDown.delay(200).duration(500)} 
               style={styles.countrySelector}
             >
               <View>
-                <Text style={styles.inputLabel}>Pays/Région</Text>
-                <Text style={styles.countryValue}>Rwanda (+250)</Text>
+                <Text style={styles.inputLabel}>{t('auth.country')}</Text>
+                <Text style={styles.countryValue}>{t('auth.rwanda')} (+250)</Text>
               </View>
               <Ionicons name="chevron-down" size={20} color={colors.gray[700]} />
             </Animated.View>
             
             {/* Champ téléphone */}
             <Animated.View 
-              entering={FadeIn.duration(300).delay(100)} 
+              entering={FadeInDown.delay(300).duration(500)} 
               style={styles.phoneInputContainer}
             >
-              <Text style={styles.inputLabel}>Numéro de téléphone</Text>
+              <Text style={styles.inputLabel}>{t('auth.phoneNumber')}</Text>
               <TouchableRipple
                 style={styles.phoneInput}
                 onPress={() => {}}
                 rippleColor="rgba(0, 0, 0, 0.04)"
               >
                 <View style={styles.phoneInputInner}>
-                  <Text style={styles.phoneInputText}>Entrez votre numéro</Text>
+                  <Text style={styles.phoneInputText}>{t('auth.enterYourNumber')}</Text>
                 </View>
               </TouchableRipple>
             </Animated.View>
             
             <Animated.View 
-              entering={FadeIn.duration(300).delay(200)} 
+              entering={FadeInDown.delay(400).duration(500)} 
               style={styles.disclaimer}
             >
               <Text style={styles.disclaimerText}>
-                Nous vous appellerons ou vous enverrons un SMS pour confirmer votre numéro. 
-                Des frais standards d'envoi de messages et d'échange de données s'appliquent.
+                {t('auth.disclaimerText')}
               </Text>
             </Animated.View>
             
             {/* Bouton de connexion */}
             <Animated.View 
-              entering={FadeIn.duration(300).delay(300)}
+              entering={FadeInDown.delay(500).duration(500)}
               style={styles.buttonContainer}
             >
               <Button
@@ -124,65 +126,45 @@ const LoginScreen = () => {
                 contentStyle={styles.buttonContent}
                 labelStyle={styles.buttonLabel}
               >
-                Continuer
+                {t('common.continue')}
               </Button>
             </Animated.View>
             
             {/* Séparateur OU */}
             <Animated.View 
-              entering={FadeIn.duration(300).delay(400)}
+              entering={FadeInDown.delay(600).duration(500)}
               style={styles.dividerContainer}
             >
               <View style={styles.divider} />
-              <Text style={styles.dividerText}>ou</Text>
+              <Text style={styles.dividerText}>{t('common.or')}</Text>
               <View style={styles.divider} />
             </Animated.View>
             
             {/* Options alternatives de connexion */}
-            <Animated.View entering={FadeIn.duration(300).delay(500)}>
-              <TouchableRipple
-                style={styles.socialButton}
-                onPress={() => {}}
-                rippleColor="rgba(0, 0, 0, 0.04)"
-              >
-                <View style={styles.socialButtonContent}>
-                  <Ionicons name="mail-outline" size={20} color={colors.gray[800]} />
-                  <Text style={styles.socialButtonText}>Continuer avec une adresse e-mail</Text>
-                </View>
-              </TouchableRipple>
+            <Animated.View 
+              entering={FadeInDown.delay(700).duration(500)}
+              style={styles.socialButtonsContainer}
+            >
+              <TouchableOpacity style={[styles.socialButton, styles.googleButton]}>
+                <Ionicons name="logo-google" size={20} color={colors.white} />
+                <Text style={[styles.socialButtonText, styles.appleButtonText]}>
+                  {t('auth.continueWithGoogle')}
+                </Text>
+              </TouchableOpacity>
               
-              <TouchableRipple
-                style={styles.socialButton}
-                onPress={() => {}}
-                rippleColor="rgba(0, 0, 0, 0.04)"
-              >
-                <View style={styles.socialButtonContent}>
-                  <Ionicons name="logo-apple" size={20} color={colors.gray[800]} />
-                  <Text style={styles.socialButtonText}>Continuer avec Apple</Text>
-                </View>
-              </TouchableRipple>
+              <TouchableOpacity style={[styles.socialButton, styles.appleButton]}>
+                <Ionicons name="logo-apple" size={20} color={colors.white} />
+                <Text style={[styles.socialButtonText, styles.appleButtonText]}>
+                  {t('auth.continueWithApple')}
+                </Text>
+              </TouchableOpacity>
               
-              <TouchableRipple
-                style={styles.socialButton}
-                onPress={() => {}}
-                rippleColor="rgba(0, 0, 0, 0.04)"
-              >
-                <View style={styles.socialButtonContent}>
-                  <Ionicons name="logo-google" size={20} color={colors.gray[800]} />
-                  <Text style={styles.socialButtonText}>Continuer avec Google</Text>
-                </View>
-              </TouchableRipple>
-              
-              <TouchableRipple
-                style={styles.socialButton}
-                onPress={() => {}}
-                rippleColor="rgba(0, 0, 0, 0.04)"
-              >
-                <View style={styles.socialButtonContent}>
-                  <Ionicons name="logo-facebook" size={20} color={colors.gray[800]} />
-                  <Text style={styles.socialButtonText}>Continuer avec Facebook</Text>
-                </View>
-              </TouchableRipple>
+              <TouchableOpacity style={[styles.socialButton, styles.facebookButton]}>
+                <Ionicons name="logo-facebook" size={20} color={colors.white} />
+                <Text style={[styles.socialButtonText, styles.facebookButtonText]}>
+                  {t('auth.continueWithFacebook')}
+                </Text>
+              </TouchableOpacity>
             </Animated.View>
           </View>
         </ScrollView>
@@ -302,6 +284,10 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.sm,
     color: colors.gray[500],
   },
+  socialButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -312,15 +298,31 @@ const styles = StyleSheet.create({
     marginBottom: spacing[4],
     height: 48,
   },
-  socialButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  socialIcon: {
+    width: 20,
+    height: 20,
+    marginRight: spacing[3],
   },
   socialButtonText: {
     fontSize: typography.fontSize.base,
     fontWeight: '500',
     color: colors.gray[800],
     marginLeft: spacing[3],
+  },
+  appleButton: {
+    backgroundColor: colors.apple,
+  },
+  appleButtonText: {
+    color: colors.white,
+  },
+  facebookButton: {
+    backgroundColor: colors.facebook,
+  },
+  facebookButtonText: {
+    color: colors.white,
+  },
+  googleButton: {
+    backgroundColor: colors.google,
   },
 });
 

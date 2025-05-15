@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Dimensions, TouchableOpacity, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -122,7 +122,7 @@ const PreferenceCarouselScreen = () => {
     }
   };
 
-  const handleScroll = (event: any) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const xOffset = event.nativeEvent.contentOffset.x;
     const index = Math.round(xOffset / width);
     if (index !== currentIndex) {

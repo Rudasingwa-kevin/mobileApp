@@ -7,7 +7,7 @@ import {
   TouchableOpacity, 
   Dimensions 
 } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, spacing, typography, borderRadius, shadows } from '../theme';
 import { ExploreListing } from '../data/exploreListings';
@@ -45,19 +45,19 @@ const GridListingCard: React.FC<GridListingCardProps> = ({
   const getBadgeInfo = () => {
     if (listing.longTerm) {
       return { 
-        icon: 'calendar-outline',
+        icon: 'event',
         text: 'Long terme',
         color: '#4a6da7'
       };
     } else if (listing.forStudents) {
       return { 
-        icon: 'school-outline',
+        icon: 'school',
         text: 'Étudiants',
         color: '#6a7d5e'
       };
     } else if (listing.nearLake) {
       return { 
-        icon: 'water-outline',
+        icon: 'water-drop',
         text: 'Vue lac',
         color: '#2b87b9'
       };
@@ -85,12 +85,12 @@ const GridListingCard: React.FC<GridListingCardProps> = ({
           />
           
           <TouchableOpacity style={styles.heartButton}>
-            <Ionicons name="heart-outline" size={20} color={colors.white} />
+            <MaterialIcons name="favorite-border" size={20} color={colors.white} />
           </TouchableOpacity>
           
           {badgeInfo && (
             <View style={[styles.badgeContainer, { backgroundColor: badgeInfo.color }]}>
-              <Ionicons name={badgeInfo.icon} size={12} color={colors.white} />
+              <MaterialIcons name={badgeInfo.icon as any} size={12} color={colors.white} />
               <Text style={styles.badgeText}>{badgeInfo.text}</Text>
             </View>
           )}
@@ -103,7 +103,7 @@ const GridListingCard: React.FC<GridListingCardProps> = ({
             </Text>
             
             <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={12} color={colors.black} />
+              <MaterialIcons name="star" size={12} color={colors.black} />
               <Text style={styles.ratingText}>{listing.rating}</Text>
             </View>
           </View>

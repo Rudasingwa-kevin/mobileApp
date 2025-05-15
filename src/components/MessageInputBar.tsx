@@ -1,14 +1,49 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, Platform, Keyboard } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { 
+  StyleSheet, 
+  View, 
+  TextInput, 
+  TouchableOpacity, 
+  Platform, 
+  Keyboard,
+  Animated as RNAnimated
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 interface MessageInputBarProps {
   onSend: (text: string) => void;
+  placeholder?: string;
+  sendButtonText?: string;
 }
 
-const MessageInputBar: React.FC<MessageInputBarProps> = ({ onSend }) => {
+const MessageInputBar: React.FC<MessageInputBarProps> = ({ 
+  onSend, 
+  placeholder, 
+  sendButtonText 
+}) => {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
+  const scaleAnim = useRef(new RNAnimated.Value(1)).current;
+  
+  const handlePressIn = () => {
+    RNAnimated.spring(scaleAnim, {
+      toValue: 0.95,
+      friction: 7,
+      tension: 40,
+      useNativeDriver: true
+    }).start();
+  };
+  
+  const handlePressOut = () => {
+    RNAnimated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true
+    }).start();
+  };
   
   const handleSend = () => {
     if (text.trim().length === 0) return;
@@ -20,14 +55,10 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({ onSend }) => {
   
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.attachButton}>
-        <Ionicons name="attach" size={24} color={colors.gray[600]} />
-      </TouchableOpacity>
-      
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Écrire un message..."
+          placeholder={placeholder || t('messages.typeMessage')}
           placeholderTextColor={colors.gray[500]}
           value={text}
           onChangeText={setText}
@@ -35,18 +66,27 @@ const MessageInputBar: React.FC<MessageInputBarProps> = ({ onSend }) => {
           maxLength={500}
           returnKeyType="default"
         />
+        
+        <TouchableOpacity 
+          style={[
+            styles.sendButton,
+            text.trim().length === 0 && styles.sendButtonDisabled
+          ]}
+          onPress={handleSend}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          disabled={text.trim().length === 0}
+          activeOpacity={0.8}
+        >
+          <RNAnimated.View style={{ transform: [{ scale: scaleAnim }] }}>
+            <Ionicons 
+              name="paper-plane" 
+              size={20} 
+              color={text.trim().length === 0 ? colors.gray[400] : colors.white} 
+            />
+          </RNAnimated.View>
+        </TouchableOpacity>
       </View>
-      
-      <TouchableOpacity 
-        style={[
-          styles.sendButton,
-          text.trim().length === 0 && styles.sendButtonDisabled
-        ]}
-        onPress={handleSend}
-        disabled={text.trim().length === 0}
-      >
-        <Ionicons name="send" size={20} color={text.trim().length === 0 ? colors.gray[400] : colors.white} />
-      </TouchableOpacity>
     </View>
   );
 };
@@ -66,13 +106,6 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  attachButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing[2],
-  },
   inputContainer: {
     flex: 1,
     flexDirection: 'row',
@@ -80,7 +113,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray[100],
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing[3],
-    paddingVertical: Platform.OS === 'ios' ? spacing[2] : 0,
+    paddingVertical: Platform.OS === 'ios' ? spacing[1] : 0,
     minHeight: 40,
   },
   input: {
@@ -88,19 +121,20 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.base,
     color: colors.gray[800],
     maxHeight: 100, // Maximum height before scrolling
+    paddingVertical: Platform.OS === 'ios' ? spacing[1] : spacing[2],
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: spacing[2],
+    marginLeft: spacing[1],
     ...shadows.sm,
   },
   sendButtonDisabled: {
-    backgroundColor: colors.gray[200],
+    backgroundColor: colors.gray[300],
   },
 });
 

@@ -4,11 +4,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from 'react-native-paper';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { colors, spacing, typography, borderRadius, shadows } from '../theme';
+import { useTranslation } from 'react-i18next';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
+import ExplorerScreen from '../screens/ExplorerScreen';
 import SearchScreen from '../screens/SearchScreen';
 import LogementDetailScreen from '../screens/LogementDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -45,6 +47,7 @@ const Tab = createBottomTabNavigator();
 // Tab Navigator Component
 const TabNavigator = () => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { totalUnreadCount } = useMessagesStore();
   const { favoriteIds } = useFavoritesStore();
   const favoriteCount = favoriteIds.length;
@@ -61,12 +64,21 @@ const TabNavigator = () => {
           borderTopColor: colors.gray[200],
           height: 55,
           paddingBottom: 5,
+          position: 'absolute',
+          bottom: 16,
+          left: 20,
+          right: 20,
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
+          borderLeftRadius: 16,
+          borderRightRadius: 16,
+          borderRadius: 16,
           ...Platform.select({
             ios: {
-              shadowColor: colors.gray[300],
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.15,
-              shadowRadius: 3,
+              shadowColor: colors.gray[400],
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
             },
             android: {
               elevation: 8,
@@ -81,22 +93,22 @@ const TabNavigator = () => {
       }}
     >
       <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
+        name="Explorer" 
+        component={ExplorerScreen}
         options={{
-          tabBarLabel: 'Explorer',
+          tabBarLabel: t('tabs.explorer'),
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search" size={size} color={color} />
+            <MaterialIcons name="search" size={size} color={color} />
           ),
         }} 
       />
       <Tab.Screen 
-        name="Map" 
-        component={MapScreen}
+        name="LocalGuide" 
+        component={LocalGuideScreen}
         options={{
-          tabBarLabel: 'Carte',
+          tabBarLabel: t('tabs.guides'),
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map-outline" size={size} color={color} />
+            <MaterialIcons name="menu-book" size={size} color={color} />
           ),
         }}
       />
@@ -104,10 +116,10 @@ const TabNavigator = () => {
         name="Favorites" 
         component={FavoritesScreen}
         options={{
-          tabBarLabel: 'Favoris',
+          tabBarLabel: t('tabs.favorites'),
           tabBarIcon: ({ color, size }) => (
             <View>
-              <Ionicons name="heart-outline" size={size} color={color} />
+              <MaterialIcons name="favorite-border" size={size} color={color} />
               {favoriteCount > 0 && (
                 <View style={styles.badgeContainer}>
                   <Text style={styles.badgeText}>
@@ -123,10 +135,10 @@ const TabNavigator = () => {
         name="MessagesList" 
         component={MessageListScreen}
         options={{
-          tabBarLabel: 'Messages',
+          tabBarLabel: t('tabs.messages'),
           tabBarIcon: ({ color, size }) => (
             <View>
-              <Ionicons name="chatbubble-outline" size={size} color={color} />
+              <MaterialIcons name="chat-bubble-outline" size={size} color={color} />
               {totalUnreadCount > 0 && (
                 <View style={styles.badgeContainer}>
                   <Text style={styles.badgeText}>
@@ -142,9 +154,9 @@ const TabNavigator = () => {
         name="Profile" 
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Profil',
+          tabBarLabel: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" size={size} color={color} />
+            <MaterialIcons name="account-circle" size={size} color={color} />
           ),
         }}
       />
@@ -258,16 +270,16 @@ const AppNavigator = () => {
                 }}
               />
               <Stack.Screen
-                name="LocalGuide"
-                component={LocalGuideScreen}
+                name="GuideDetail"
+                component={GuideDetailScreen}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
                 }}
               />
               <Stack.Screen
-                name="GuideDetail"
-                component={GuideDetailScreen}
+                name="LocalGuide"
+                component={LocalGuideScreen}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',

@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider, DefaultTheme, configureFonts } from 'react-native-paper';
 import AppNavigator from './src/navigation';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors } from './src/theme';
 import { usePreferences } from './src/store/preferences';
 import { I18nextProvider } from 'react-i18next';
-import i18n, { useSyncLanguage, initializeLanguage } from './src/utils/i18n';
+import i18n, { initializeLanguage } from './src/utils/i18n';
+import { useSyncLanguage } from './src/hooks/useLanguage';
 
 // Configuration complète des polices pour React Native Paper
 const fontConfig = {
@@ -93,6 +94,7 @@ const theme = {
 
 // Wrapper pour le theme
 const AppContent = () => {
+  const [isLoading, setIsLoading] = useState(true);
   // Synchroniser la langue
   useSyncLanguage();
   const { initializeLanguageFromSystem } = usePreferences();
@@ -107,11 +109,21 @@ const AppContent = () => {
         await initializeLanguageFromSystem();
       } catch (error) {
         console.error('Erreur lors de l\'initialisation des préférences linguistiques:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     initApp();
-  }, []);
+  }, [initializeLanguageFromSystem]);
+  
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
   
   return (
     <View style={styles.container}>
@@ -140,6 +152,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.white,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: colors.white,
   },
 });

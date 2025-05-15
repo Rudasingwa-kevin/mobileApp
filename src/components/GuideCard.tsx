@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../theme';
 import { Guide, RootStackParamList } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface GuideCardProps {
   guide: Guide;
@@ -20,6 +21,7 @@ const GuideCard: React.FC<GuideCardProps> = ({
 }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width } = Dimensions.get('window');
+  const { t } = useTranslation();
   
   // Calculer la largeur de la carte en fonction de la taille
   const getCardWidth = () => {
@@ -71,7 +73,7 @@ const GuideCard: React.FC<GuideCardProps> = ({
           
           {/* Badge "Nouveau" si le guide est récent */}
           {isRecent() && (
-            <Badge style={styles.newBadge}>Nouveau</Badge>
+            <Badge style={styles.newBadge}>{t('common.new')}</Badge>
           )}
         </View>
         
@@ -95,7 +97,7 @@ const GuideCard: React.FC<GuideCardProps> = ({
           
           <View style={styles.footer}>
             <View style={styles.readMore}>
-              <Text style={styles.readMoreText}>Lire</Text>
+              <Text style={styles.readMoreText}>{t('guides.readMore')}</Text>
               <Ionicons 
                 name="arrow-forward" 
                 size={14} 

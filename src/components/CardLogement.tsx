@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 import { Card, Text, Chip, useTheme } from 'react-native-paper';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { Property } from '../types';
 import { usePreferences } from '../store/preferences';
 import Animated, { FadeInRight } from 'react-native-reanimated';
@@ -89,13 +89,13 @@ const CardLogement = ({ logement, index, onPress }: CardLogementProps) => {
     const amenityLower = amenity.toLowerCase();
     
     if (amenityLower.includes('wifi')) 
-      return <MaterialCommunityIcons name="wifi" size={size} color="#6366F1" />;
+      return <MaterialIcons name="wifi" size={size} color="#6366F1" />;
     if (amenityLower.includes('parking')) 
-      return <MaterialCommunityIcons name="parking" size={size} color="#6366F1" />;
+      return <MaterialIcons name="local-parking" size={size} color="#6366F1" />;
     if (amenityLower.includes('eau chaude')) 
-      return <MaterialCommunityIcons name="water" size={size} color="#6366F1" />;
+      return <MaterialIcons name="water-drop" size={size} color="#6366F1" />;
       
-    return <MaterialCommunityIcons name="check-circle" size={size} color="#6366F1" />;
+    return <MaterialIcons name="check-circle" size={size} color="#6366F1" />;
   };
 
   return (
@@ -226,19 +226,6 @@ const styles = StyleSheet.create({
   },
   amenityText: {
     color: '#6366F1',
-  },
-});
-
-export default CardLogement; 
-  price: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4F46E5',
-  },
-  month: {
-    fontSize: 14,
-    fontWeight: 'normal',
-    color: '#9E9E9E',
   },
   viewButton: {
     flexDirection: 'row',

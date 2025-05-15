@@ -3,10 +3,31 @@ import { Currency } from '../store/preferences';
 // Taux de change fictifs par rapport au RWF (basés sur des valeurs approximatives)
 // 1 USD = ~1300 RWF
 // 1 EUR = ~1500 RWF
+const INVERSE_EXCHANGE_RATES: Record<Currency, number> = {
+  RWF: 1,       // 1 RWF = 1 RWF
+  USD: 1300,    // 1 USD = 1300 RWF
+  EUR: 1500,    // 1 EUR = 1500 RWF
+};
+
 const EXCHANGE_RATES: Record<Currency, number> = {
-  RWF: 1, // Taux de base (1 RWF = 1 RWF)
-  USD: 0.00077, // 1 RWF = 0.00077 USD (ou 1 USD = 1300 RWF)
-  EUR: 0.00067, // 1 RWF = 0.00067 EUR (ou 1 EUR = 1500 RWF)
+  RWF: 1, 
+  USD: 1 / INVERSE_EXCHANGE_RATES.USD, // 1 RWF = 0.00077 USD
+  EUR: 1 / INVERSE_EXCHANGE_RATES.EUR, // 1 RWF = 0.00067 EUR
+};
+
+/**
+ * Convertit un prix d'une devise donnée vers RWF
+ * @param price Prix dans la devise d'origine
+ * @param fromCurrency Devise d'origine
+ * @returns Prix converti en RWF
+ */
+export const convertToRwf = (price: number, fromCurrency: Currency): number => {
+  const rateToRwf = INVERSE_EXCHANGE_RATES[fromCurrency];
+  if (!rateToRwf) {
+    console.warn(`Taux de change RWF non trouvé pour la devise ${fromCurrency}`);
+    return price; // Retourne le prix original si le taux n'est pas trouvé
+  }
+  return Math.round(price * rateToRwf);
 };
 
 /**

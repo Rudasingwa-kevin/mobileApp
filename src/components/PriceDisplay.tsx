@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Text, StyleSheet, StyleProp, TextStyle, ViewStyle, View } from 'react-native';
 import { usePreferences } from '../store/preferences';
 import { convertPrice, formatPrice } from '../utils/currency';
 import { colors, typography } from '../theme';
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 interface PriceDisplayProps {
   priceInRwf: number;
-  style?: any;
+  style?: StyleProp<TextStyle | ViewStyle>;
   size?: 'small' | 'medium' | 'large';
   showOriginal?: boolean;
   isPerMonth?: boolean;

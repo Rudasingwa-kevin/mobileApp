@@ -50,9 +50,11 @@ export interface Property {
   bedrooms?: number;
   bathrooms?: number;
   surface?: number;
+  size?: number;
   location: {
     district?: string;
     city: string;
+    address?: string;
     coordinates?: {
       latitude: number;
       longitude: number;
@@ -62,13 +64,17 @@ export interface Property {
   images: string[];
   rating?: number;
   reviews?: number;
-  contactPhone?: string;
-  contactEmail?: string;
   owner?: {
     id: string;
     name: string;
     avatar?: string;
-  }
+    phone?: string;
+    email?: string;
+  };
+  available: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  type: string;
 }
 
 // Type pour le filtre de recherche

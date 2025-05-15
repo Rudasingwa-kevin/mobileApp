@@ -10,7 +10,27 @@ interface ConversationListItemProps {
 
 const ConversationListItem: React.FC<ConversationListItemProps> = ({ conversation, onPress }) => {
   // Format date for last message time display
-  const formatLastMessageTime = (date: Date) => {
+  const formatLastMessageTime = (dateInput: Date | string | number | undefined | null): string => {
+    if (!dateInput) {
+      return ''; // Or some placeholder like '--:--'
+    }
+
+    let date: Date;
+    if (dateInput instanceof Date) {
+      date = dateInput;
+    } else if (typeof dateInput === 'string') {
+      date = new Date(dateInput);
+    } else if (typeof dateInput === 'number') {
+      date = new Date(dateInput); // Assuming it's a timestamp
+    } else {
+      return ''; // Should not happen if types are correct, but good fallback
+    }
+
+    // Check if the parsed date is valid
+    if (isNaN(date.getTime())) {
+      return ''; // Invalid date string or number provided
+    }
+
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -20,9 +40,10 @@ const ConversationListItem: React.FC<ConversationListItemProps> = ({ conversatio
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else if (diffDays === 1) {
       // Yesterday
-      return 'Hier';
+      return 'Hier'; // TODO: Consider i18n for "Yesterday"
     } else if (diffDays < 7) {
       // Within a week - show day name
+      // TODO: Consider i18n for day names
       const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
       return days[date.getDay()];
     } else {

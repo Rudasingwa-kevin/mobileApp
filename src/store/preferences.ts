@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
-import { changeLanguage as i18nChangeLanguage } from '../utils/i18n';
+import i18n from 'i18next';
 
 export type Language = 'fr' | 'en' | 'rw' | 'sw';
 export type Currency = 'RWF' | 'USD' | 'EUR';
@@ -41,6 +41,20 @@ const getSystemLanguage = (): Language => {
   }
 };
 
+// Fonction pour changer la langue dans i18n sans créer de dépendance circulaire
+const updateI18nLanguage = (language: string) => {
+  if (i18n && typeof i18n.changeLanguage === 'function') {
+    i18n.changeLanguage(language);
+    
+    // Optionally persist to AsyncStorage
+    try {
+      AsyncStorage.setItem('@locamap:language', language);
+    } catch (error) {
+      console.error('Error saving language preference:', error);
+    }
+  }
+};
+
 // Store persisté avec AsyncStorage
 export const usePreferences = create<PreferencesState>()(
   persist(
@@ -51,7 +65,7 @@ export const usePreferences = create<PreferencesState>()(
         return new Promise<void>((resolve) => {
           set({ language });
           // Synchroniser avec i18n
-          i18nChangeLanguage(language);
+          updateI18nLanguage(language);
           setTimeout(resolve, 50);
         });
       },
@@ -86,10 +100,10 @@ export const usePreferences = create<PreferencesState>()(
             const systemLanguage = getSystemLanguage();
             set({ language: systemLanguage });
             // Synchroniser avec i18n
-            i18nChangeLanguage(systemLanguage);
+            updateI18nLanguage(systemLanguage);
           } else {
             // Assurer la synchronisation avec i18n
-            i18nChangeLanguage(currentLang);
+            updateI18nLanguage(currentLang);
           }
           
           setTimeout(resolve, 50);
@@ -100,7 +114,7 @@ export const usePreferences = create<PreferencesState>()(
         return new Promise<void>((resolve) => {
           set(DEFAULT_PREFERENCES);
           // Synchroniser avec i18n
-          i18nChangeLanguage(DEFAULT_PREFERENCES.language);
+          updateI18nLanguage(DEFAULT_PREFERENCES.language);
           setTimeout(resolve, 50);
         });
       },

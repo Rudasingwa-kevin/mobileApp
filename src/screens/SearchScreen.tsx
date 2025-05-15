@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -21,19 +21,19 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import FavoriteButton from '../components/FavoriteButton';
 import { useFavoritesStore } from '../store/favorites';
 import { useAlertsStore } from '../store/alerts';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 type SearchScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Search'>;
 
-// Categories avec icônes
-const categories = [
-  { id: 'vue', name: 'Avec vue', icon: 'image-outline' },
-  { id: 'design', name: 'Design', icon: 'home' },
-  { id: 'chambres', name: 'Chambres', icon: 'bed-outline' },
-  { id: 'lac', name: 'Bord de lac', icon: 'water-outline' },
-  { id: 'iles', name: 'Îles', icon: 'map-outline' },
-];
+interface CategoryItem {
+  id: string;
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}
 
 const SearchScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const theme = useTheme();
   const { listings, fetchListings, isLoading } = useSearchStore();
@@ -111,7 +111,16 @@ const SearchScreen = () => {
     }
   };
 
-  const renderCategoryItem = ({ item, index }: { item: any; index: number }) => (
+  // Categories avec icônes
+  const categories: CategoryItem[] = [
+    { id: 'vue', name: t('search.categories.view'), icon: 'image-outline' },
+    { id: 'design', name: t('search.categories.design'), icon: 'home' },
+    { id: 'chambres', name: t('search.categories.bedrooms'), icon: 'bed-outline' },
+    { id: 'lac', name: t('search.categories.lake'), icon: 'water-outline' },
+    { id: 'iles', name: t('search.categories.islands'), icon: 'map-outline' },
+  ];
+
+  const renderCategoryItem = ({ item, index }: { item: CategoryItem; index: number }) => (
     <Animated.View 
       entering={FadeIn.delay(index * 100)} 
       style={styles.categoryItemContainer}
@@ -154,7 +163,7 @@ const SearchScreen = () => {
           style={styles.searchContainer}
         >
           <Searchbar
-            placeholder="Commencer ma recherche"
+            placeholder={t('search.startSearch')}
             iconColor={colors.gray[700]}
             inputStyle={styles.searchInput}
             style={styles.searchBar}
@@ -168,6 +177,7 @@ const SearchScreen = () => {
           >
             <Ionicons name="notifications-outline" size={20} color={colors.gray[700]} />
           </TouchableOpacity>
+          <LanguageSwitcher style={styles.languageButton} />
         </Animated.View>
 
         {/* Catégories */}
@@ -189,7 +199,7 @@ const SearchScreen = () => {
         >
           <View style={styles.pricingTag}>
             <Ionicons name="pricetag" size={14} color={colors.primary} />
-            <Text style={styles.pricingTagText}>Les prix comprennent tous les frais</Text>
+            <Text style={styles.pricingTagText}>{t('search.priceIncludesAllFees')}</Text>
           </View>
         </Animated.View>
 
@@ -210,7 +220,7 @@ const SearchScreen = () => {
               >
                 <View style={styles.featuredBadge}>
                   <Ionicons name="trophy" size={15} color={colors.white} />
-                  <Text style={styles.featuredBadgeText}>Coup de cœur voyageurs</Text>
+                  <Text style={styles.featuredBadgeText}>{t('search.travelersChoice')}</Text>
                 </View>
                 
                 <Image 
@@ -237,13 +247,13 @@ const SearchScreen = () => {
                     </View>
                   </View>
                   
-                  <Text style={styles.distanceText}>À 5 kilomètres</Text>
-                  <Text style={styles.dateText}>11-16 juin</Text>
+                  <Text style={styles.distanceText}>{t('search.distance', { distance: 5 })}</Text>
+                  <Text style={styles.dateText}>{t('search.dates', { start: '11', end: '16', month: t('search.months.june') })}</Text>
                   
                   <View style={styles.priceContainer}>
                     <Text style={styles.priceText}>
                       <Text style={styles.priceBold}>{property.price} {property.currency}</Text>
-                      <Text style={styles.priceUnit}> par nuit</Text>
+                      <Text style={styles.priceUnit}> {t('property.perNight')}</Text>
                     </Text>
                   </View>
                 </View>
@@ -258,7 +268,7 @@ const SearchScreen = () => {
           onDismiss={() => setAlertVisible(false)}
           duration={5000}
           action={{
-            label: 'Voir',
+            label: t('common.view'),
             onPress: () => {
               if (matchedProperty) {
                 navigation.navigate('PropertyDetails', { propertyId: matchedProperty.id });
@@ -270,7 +280,7 @@ const SearchScreen = () => {
           <View style={styles.snackbarContent}>
             <Ionicons name="notifications" size={20} color={colors.white} style={styles.snackbarIcon} />
             <Text style={styles.snackbarText}>
-              Nouveau logement correspondant à votre alerte !
+              {t('alerts.newMatchingProperty')}
             </Text>
           </View>
         </Snackbar>
@@ -317,6 +327,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gray[200],
     ...shadows.sm,
+  },
+  languageButton: {
+    marginLeft: spacing[2],
   },
   categoryItemContainer: {
     alignItems: 'center',
