@@ -187,16 +187,8 @@ const ProfileScreen = () => {
 
   // Navigate to become host screen
   const navigateToBecomeHost = () => {
-    // For now just show an alert since the screen doesn't exist yet
-    Alert.alert(
-      'Become a Host', 
-      'You can create your own listing and rent out your property to visitors. This feature will be available soon!',
-      [
-        { text: 'OK', style: 'default' }
-      ]
-    );
-    // In a real implementation, you'd navigate to the BecomeHost screen:
-    // navigation.navigate('BecomeHost');
+    // Navigate to the HostDashboard screen
+    navigation.navigate('HostDashboard');
   };
 
   // Handle logout

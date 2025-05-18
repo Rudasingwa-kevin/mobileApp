@@ -31,7 +31,14 @@
     "profile": "Profil"
   },
   "host": {
-    "become": "Devenir hôte"
+    "become": "Devenir hôte",
+    "dashboard": {
+      "title": "Tableau de bord d'hôte",
+      "today": "Aujourd'hui",
+      "upcoming": "À venir",
+      "noReservations": "Vous n'avez pas de réservations",
+      "discoverTools": "Découvrir de nouveaux outils pour les hôtes"
+    }
   },
   "auth": {
     "login": "Connexion",

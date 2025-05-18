@@ -25,4 +25,5 @@ export type RootStackParamList = {
     propertyId: string;
   };
   Auth: undefined;
+  HostDashboard: undefined;
 }; 

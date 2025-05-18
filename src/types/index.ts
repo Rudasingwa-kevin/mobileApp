@@ -38,6 +38,10 @@ export type RootStackParamList = {
   // Local guides screens
   LocalGuide: undefined;
   GuideDetail: { guideId: string };
+  
+  // Host screens
+  HostDashboard: undefined;
+  CreateListing: undefined;
 };
 
 // Type pour les propriétés immobilières

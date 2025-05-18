@@ -31,7 +31,14 @@
     "profile": "Profile"
   },
   "host": {
-    "become": "Become a host"
+    "become": "Become a host",
+    "dashboard": {
+      "title": "Host Dashboard",
+      "today": "Today",
+      "upcoming": "Upcoming",
+      "noReservations": "You have no reservations",
+      "discoverTools": "Discover new tools for hosts"
+    }
   },
   "auth": {
     "login": "Login",

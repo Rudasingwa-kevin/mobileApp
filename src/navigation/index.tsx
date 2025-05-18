@@ -29,6 +29,8 @@ import LeaveReviewScreen from '../screens/LeaveReviewScreen';
 import LocalGuideScreen from '../screens/LocalGuideScreen';
 import GuideDetailScreen from '../screens/GuideDetailScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import HostDashboardScreen from '../screens/HostDashboardScreen';
+import CreateListingScreen from '../screens/CreateListingScreen';
 
 // Navigators
 import AuthNavigator from './AuthNavigator';
@@ -299,6 +301,22 @@ const AppNavigator = () => {
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
+                }}
+              />
+              <Stack.Screen
+                name="HostDashboard"
+                component={HostDashboardScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                }}
+              />
+              <Stack.Screen
+                name="CreateListing"
+                component={CreateListingScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_bottom',
                 }}
               />
             </>
