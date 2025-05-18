@@ -37,4 +37,4 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
   isFavorite: (propertyId) => {
     return get().favoriteIds.includes(propertyId);
   },
-})); 
+}));

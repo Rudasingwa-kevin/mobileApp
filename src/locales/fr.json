@@ -30,6 +30,9 @@
     "messages": "Messages",
     "profile": "Profil"
   },
+  "host": {
+    "become": "Devenir hôte"
+  },
   "auth": {
     "login": "Connexion",
     "loginSubtitle": "Connectez-vous pour découvrir les meilleurs logements à Gisenyi",
@@ -196,7 +199,10 @@
   "favorites": {
     "title": "Favoris",
     "noFavorites": "Vous n'avez pas encore de favoris",
-    "startBrowsing": "Commencez à parcourir les logements pour ajouter des favoris"
+    "startBrowsing": "Commencez à parcourir les logements pour ajouter des favoris",
+    "exploreMore": "Explorer les logements",
+    "savedCount_one": "{{count}} favori sauvegardé",
+    "savedCount_other": "{{count}} favoris sauvegardés"
   },
   "alerts": {
     "title": "Créer une alerte",

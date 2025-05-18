@@ -185,6 +185,20 @@ const ProfileScreen = () => {
     Alert.alert('About LocaMap', 'This will show information about LocaMap in a future update.');
   };
 
+  // Navigate to become host screen
+  const navigateToBecomeHost = () => {
+    // For now just show an alert since the screen doesn't exist yet
+    Alert.alert(
+      'Become a Host', 
+      'You can create your own listing and rent out your property to visitors. This feature will be available soon!',
+      [
+        { text: 'OK', style: 'default' }
+      ]
+    );
+    // In a real implementation, you'd navigate to the BecomeHost screen:
+    // navigation.navigate('BecomeHost');
+  };
+
   // Handle logout
   const handleLogout = () => {
     Alert.alert(
@@ -482,6 +496,16 @@ const ProfileScreen = () => {
         {/* Bottom padding */}
         <View style={{ height: 90 }} />
       </ScrollView>
+
+      {/* Floating Become a Host Button */}
+      <TouchableOpacity
+        style={[styles.becomeHostButton, { backgroundColor: '#FF5A5F' }]}
+        onPress={navigateToBecomeHost}
+        activeOpacity={0.9}
+      >
+        <MaterialIcons name="add-home" size={20} color="#FFFFFF" style={styles.becomeHostIcon} />
+        <Text style={styles.becomeHostText}>{t('host.become')}</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -618,6 +642,31 @@ const styles = StyleSheet.create({
   logoutButtonLabel: {
     fontSize: typography.fontSize.base,
     fontWeight: '600',
+  },
+  // Floating Button Styles
+  becomeHostButton: {
+    position: 'absolute',
+    bottom: 90,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+    zIndex: 999,
+  },
+  becomeHostIcon: {
+    marginRight: 8,
+  },
+  becomeHostText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
 

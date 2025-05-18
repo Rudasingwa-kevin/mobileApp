@@ -88,7 +88,10 @@ const AuthScreen = () => {
       // Navigate to home or preference carousel screen after a short delay
       setTimeout(() => {
         if (preferences.hasCompletedOnboarding) {
-          navigation.navigate('Home');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'MainTabs' }],
+          });
         } else {
           navigation.navigate('PreferenceCarousel');
         }
@@ -120,7 +123,10 @@ const AuthScreen = () => {
         // Navigate to home screen or preference carousel after a short delay
         setTimeout(() => {
           if (preferences.hasCompletedOnboarding) {
-            navigation.navigate('Home');
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'MainTabs' }],
+            });
           } else {
             navigation.navigate('PreferenceCarousel');
           }

@@ -31,10 +31,10 @@ import { RootStackParamList } from '../types';
 import { Property } from '../types/index';
 import SearchFiltersModal from '../components/SearchFiltersModal';
 import { useSearchStore, SearchFilters } from '../store/search';
-import { useSavedStore } from '../store/saved';
 import { useUserStore } from '../store/user';
 import { usePreferences } from '../store/preferences';
 import { useTranslation } from 'react-i18next';
+import { useFavoritesStore } from '../store/favorites';
 import Animated, {
   FadeInUp,
   FadeIn,
@@ -139,9 +139,9 @@ const ExplorerScreen = () => {
   const theme = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
-  const { isSaved } = useSavedStore();
   const { user } = useUserStore();
   const { currency } = usePreferences();
+  const { addFavorite, removeFavorite, isFavorite } = useFavoritesStore();
   
   const {
     listings,
@@ -334,9 +334,17 @@ const ExplorerScreen = () => {
   );
 
   const renderPropertyCard = ({ item, index }: { item: Property; index: number }) => {
-    const isPropertySaved = isSaved(item.id);
+    const currentlyFavorite = isFavorite(item.id);
     const isNew = new Date(item.createdAt).getTime() > Date.now() - (30 * 24 * 60 * 60 * 1000);
     
+    const handleToggleFavorite = () => {
+      if (currentlyFavorite) {
+        removeFavorite(item.id);
+      } else {
+        addFavorite(item);
+      }
+    };
+
     return (
       <Animated.View 
         entering={FadeInUp.delay(index * 50).duration(300)}
@@ -358,11 +366,14 @@ const ExplorerScreen = () => {
               style={styles.propertyImage} 
               resizeMode="cover" 
             />
-            <TouchableOpacity style={styles.favoriteButton}>
+            <TouchableOpacity 
+              style={styles.favoriteButton}
+              onPress={handleToggleFavorite}
+            >
               <MaterialIcons 
-                name={isPropertySaved ? "favorite" : "favorite-border"} 
+                name={currentlyFavorite ? "favorite" : "favorite-border"}
                 size={22} 
-                color={isPropertySaved ? "#FF5A5F" : "white"} 
+                color={currentlyFavorite ? "#FF5A5F" : "white"}
               />
             </TouchableOpacity>
             {isNew && (
@@ -505,7 +516,7 @@ const ExplorerScreen = () => {
           ) : (
             <View style={styles.propertiesGrid}>
               {displayedListings.map((item, index) => (
-                renderPropertyCard({ item, index })
+                React.cloneElement(renderPropertyCard({ item, index }), { key: item.id || index })
               ))}
             </View>
           )}
@@ -527,7 +538,7 @@ const ExplorerScreen = () => {
           <Text style={styles.sectionSubtitle}>{t('explore.localGuidesSubtitle')}</Text>
           
           <View style={styles.guidesList}>
-            {LOCAL_GUIDES.map((guide, index) => renderGuideCard({ item: guide, index }))}
+            {LOCAL_GUIDES.map((guide, index) => React.cloneElement(renderGuideCard({ item: guide, index }), { key: guide.id || index }))}
           </View>
         </View>
       </Animated.ScrollView>

@@ -30,6 +30,9 @@
     "messages": "Messages",
     "profile": "Profile"
   },
+  "host": {
+    "become": "Become a host"
+  },
   "auth": {
     "login": "Login",
     "loginSubtitle": "Sign in to discover the best accommodations in Gisenyi",
@@ -196,7 +199,10 @@
   "favorites": {
     "title": "Favorites",
     "noFavorites": "You don't have any favorites yet",
-    "startBrowsing": "Start browsing properties to add favorites"
+    "startBrowsing": "Start browsing properties to add favorites",
+    "exploreMore": "Explore Properties",
+    "savedCount_one": "{{count}} saved item",
+    "savedCount_other": "{{count}} saved items"
   },
   "alerts": {
     "title": "Create Alert",
