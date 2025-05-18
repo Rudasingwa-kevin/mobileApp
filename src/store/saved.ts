@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Property } from '../types';
+import { propertyService, userService } from '../services/api';
+import { useUserStore } from './user';
 
 // Mock data for saved properties
 const mockSavedProperties: Property[] = [
@@ -121,48 +123,90 @@ const mockSavedProperties: Property[] = [
 
 interface SavedState {
   savedItems: Property[];
+  savedIds: string[];
   lastSorted: 'dateAdded' | 'price' | 'type';
   isLoading: boolean;
+  error: string | null;
   
   // Actions
-  toggleSave: (property: Property) => void;
-  removeSaved: (propertyId: string) => void;
+  toggleSave: (property: Property) => Promise<void>;
+  removeSaved: (propertyId: string) => Promise<void>;
   isSaved: (propertyId: string) => boolean;
   sortBy: (criterion: 'dateAdded' | 'price' | 'type') => void;
   clearAll: () => void;
+  fetchSavedProperties: () => Promise<void>;
+  clearError: () => void;
 }
 
 export const useSavedStore = create<SavedState>()(
   persist(
     (set, get) => ({
-      savedItems: [...mockSavedProperties], // Initialize with mock data
+      savedItems: [],
+      savedIds: [],
       lastSorted: 'dateAdded',
       isLoading: false,
+      error: null,
       
-      toggleSave: (property: Property) => {
-        const { savedItems } = get();
-        const isAlreadySaved = savedItems.some(item => item.id === property.id);
+      toggleSave: async (property: Property) => {
+        const { savedItems, savedIds } = get();
+        const isAlreadySaved = savedIds.includes(property.id);
         
-        if (isAlreadySaved) {
-          set({
-            savedItems: savedItems.filter(item => item.id !== property.id)
+        try {
+          set({ isLoading: true, error: null });
+          
+          if (isAlreadySaved) {
+            // Appel API pour supprimer des favoris
+            await userService.unsaveProperty(property.id);
+            
+            set({
+              savedItems: savedItems.filter(item => item.id !== property.id),
+              savedIds: savedIds.filter(id => id !== property.id),
+              isLoading: false
+            });
+          } else {
+            // Appel API pour ajouter aux favoris
+            await userService.saveProperty(property.id);
+            
+            set({
+              savedItems: [...savedItems, property],
+              savedIds: [...savedIds, property.id],
+              isLoading: false
+            });
+          }
+        } catch (error) {
+          set({ 
+            error: error instanceof Error ? error.message : 'Une erreur est survenue lors de la mise à jour des favoris',
+            isLoading: false
           });
-        } else {
-          set({
-            savedItems: [...savedItems, { ...property, dateAdded: new Date().toISOString() }]
-          });
+          throw error;
         }
       },
       
-      removeSaved: (propertyId: string) => {
-        const { savedItems } = get();
-        set({
-          savedItems: savedItems.filter(item => item.id !== propertyId)
-        });
+      removeSaved: async (propertyId: string) => {
+        const { savedItems, savedIds } = get();
+        
+        try {
+          set({ isLoading: true, error: null });
+          
+          // Appel API pour supprimer des favoris
+          await userService.unsaveProperty(propertyId);
+          
+          set({
+            savedItems: savedItems.filter(item => item.id !== propertyId),
+            savedIds: savedIds.filter(id => id !== propertyId),
+            isLoading: false
+          });
+        } catch (error) {
+          set({ 
+            error: error instanceof Error ? error.message : 'Une erreur est survenue lors de la suppression du favori',
+            isLoading: false
+          });
+          throw error;
+        }
       },
       
       isSaved: (propertyId: string) => {
-        return get().savedItems.some(item => item.id === propertyId);
+        return get().savedIds.includes(propertyId);
       },
       
       sortBy: (criterion: 'dateAdded' | 'price' | 'type') => {
@@ -174,7 +218,7 @@ export const useSavedStore = create<SavedState>()(
         switch (criterion) {
           case 'dateAdded':
             sorted.sort((a, b) => {
-              return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
             break;
           case 'price':
@@ -191,30 +235,80 @@ export const useSavedStore = create<SavedState>()(
             break;
           case 'type':
             sorted.sort((a, b) => {
-              return a.propertyType.localeCompare(b.propertyType);
+              return (a.type || '').localeCompare(b.type || '');
             });
             break;
         }
         
-        // Simulate network delay in a real app fetching from API
-        setTimeout(() => {
-          set({
-            savedItems: sorted,
-            lastSorted: criterion,
-            isLoading: false
-          });
-        }, 500);
+        set({
+          savedItems: sorted,
+          lastSorted: criterion,
+          isLoading: false
+        });
       },
       
       clearAll: () => {
         set({
-          savedItems: []
+          savedItems: [],
+          savedIds: []
         });
+      },
+      
+      fetchSavedProperties: async () => {
+        const userId = useUserStore.getState().user.id;
+        
+        // Vérifier si l'utilisateur est connecté
+        if (!userId) {
+          set({
+            savedItems: [],
+            savedIds: [],
+            error: null,
+            isLoading: false
+          });
+          return;
+        }
+        
+        try {
+          set({ isLoading: true, error: null });
+          
+          // 1. Récupérer les IDs des propriétés sauvegardées
+          const savedIds = await userService.getSavedProperties();
+          
+          // 2. Si pas de favoris, on retourne un tableau vide
+          if (!savedIds.length) {
+            set({
+              savedItems: [],
+              savedIds: [],
+              isLoading: false
+            });
+            return;
+          }
+          
+          // 3. Récupérer les détails de chaque propriété
+          const propertiesPromises = savedIds.map(id => propertyService.getById(id));
+          const properties = await Promise.all(propertiesPromises);
+          
+          set({
+            savedItems: properties,
+            savedIds,
+            isLoading: false
+          });
+        } catch (error) {
+          set({ 
+            error: error instanceof Error ? error.message : 'Une erreur est survenue lors de la récupération des favoris',
+            isLoading: false
+          });
+        }
+      },
+      
+      clearError: () => {
+        set({ error: null });
       }
     }),
     {
       name: 'saved-properties-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ savedIds: state.savedIds }),
     }
   )
 ); 

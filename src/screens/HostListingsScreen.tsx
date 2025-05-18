@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   StatusBar,
   ScrollView,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import {
   Text,
@@ -14,54 +15,32 @@ import {
   Card,
   Avatar,
   Button,
+  Snackbar,
 } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, Property } from '../types';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Animated, { FadeInUp, FadeIn } from 'react-native-reanimated';
+import { propertyService } from '../services/api';
+import { useUserStore } from '../store/user';
 
 type HostScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-// Données simulées pour les annonces
-const mockListings = [
-  {
-    id: '1',
-    title: 'Appartement moderne au centre-ville',
-    location: 'Centre-ville, Gisenyi',
-    price: 75000,
-    currency: 'RWF',
-    rating: 4.8,
-    reviews: 12,
-    image: 'https://via.placeholder.com/300x200',
-    status: 'active',
-  },
-  {
-    id: '2',
-    title: 'Studio avec vue sur le lac',
-    location: 'Bord du lac, Gisenyi',
-    price: 50000,
-    currency: 'RWF',
-    rating: 4.6,
-    reviews: 8,
-    image: 'https://via.placeholder.com/300x200',
-    status: 'inactive',
-  },
-  {
-    id: '3',
-    title: 'Villa de luxe près de la plage',
-    location: 'Rubavu, Gisenyi',
-    price: 150000,
-    currency: 'RWF',
-    rating: 4.9,
-    reviews: 24,
-    image: 'https://via.placeholder.com/300x200',
-    status: 'active',
-  },
-];
+interface ListingItem {
+  id: string;
+  title: string;
+  location: string;
+  price: number;
+  currency: string;
+  rating?: number;
+  reviews?: number;
+  image: string;
+  status: 'active' | 'inactive';
+}
 
-const ListingCard = ({ item }) => {
+const ListingCard = ({ item }: { item: ListingItem }) => {
   const theme = useTheme();
   const { t } = useTranslation();
   
@@ -92,7 +71,7 @@ const ListingCard = ({ item }) => {
           
           <View style={styles.detailRow}>
             <MaterialIcons name="star" size={20} color="#FF5A5F" />
-            <Text style={styles.detailText}>{item.rating} ({item.reviews} avis)</Text>
+            <Text style={styles.detailText}>{item.rating || 0} ({item.reviews || 0} avis)</Text>
           </View>
         </View>
       </Card.Content>
@@ -111,11 +90,64 @@ const HostListingsScreen = () => {
   const theme = useTheme();
   const { t } = useTranslation();
   const navigation = useNavigation<HostScreenNavigationProp>();
+  const user = useUserStore((state) => state.user);
+  
+  const [listings, setListings] = useState<ListingItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  
+  // Charger les annonces de l'utilisateur
+  useEffect(() => {
+    const fetchUserListings = async () => {
+      try {
+        setLoading(true);
+        const properties = await propertyService.getByOwnerId(user?.id || '');
+        
+        // Convertir les propriétés API en format attendu par l'interface
+        const formattedListings: ListingItem[] = properties.map(property => ({
+          id: property.id,
+          title: property.title,
+          location: `${property.location.district || ''}, ${property.location.city}`,
+          price: property.price,
+          currency: property.currency,
+          rating: property.rating,
+          reviews: property.reviews,
+          image: property.images[0] || 'https://via.placeholder.com/300x200',
+          status: property.available ? 'active' : 'inactive',
+        }));
+        
+        setListings(formattedListings);
+        setError(null);
+      } catch (err) {
+        console.error('Erreur lors du chargement des annonces:', err);
+        setError('Impossible de charger vos annonces. Veuillez réessayer.');
+        setSnackbarVisible(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserListings();
+  }, [user]);
   
   // Fonction de navigation vers l'écran de création d'annonce
   const handleCreateListing = () => {
     navigation.navigate('CreateListing');
   };
+  
+  // Rendu en cas de chargement
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF5A5F" />
+          <Text style={styles.loadingText}>Chargement de vos annonces...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
   
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
@@ -132,13 +164,40 @@ const HostListingsScreen = () => {
         </TouchableOpacity>
       </View>
       
-      <FlatList
-        data={mockListings}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ListingCard item={item} />}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {listings.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <MaterialIcons name="home" size={64} color="#CCCCCC" />
+          <Text style={styles.emptyText}>Vous n'avez pas encore d'annonces</Text>
+          <Text style={styles.emptySubtext}>Créez votre première annonce pour commencer à louer votre logement</Text>
+          <Button 
+            mode="contained" 
+            style={{ backgroundColor: '#FF5A5F', marginTop: 16 }}
+            onPress={handleCreateListing}
+          >
+            Créer une annonce
+          </Button>
+        </View>
+      ) : (
+        <FlatList
+          data={listings}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <ListingCard item={item} />}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+      
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        action={{
+          label: 'OK',
+          onPress: () => setSnackbarVisible(false),
+        }}
+      >
+        {error}
+      </Snackbar>
     </SafeAreaView>
   );
 };
@@ -214,6 +273,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#717171',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+    color: '#333333',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#717171',
+    textAlign: 'center',
+    marginTop: 8,
   },
 });
 

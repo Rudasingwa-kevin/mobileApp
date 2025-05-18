@@ -9,6 +9,7 @@ import { usePreferences } from './src/store/preferences';
 import { I18nextProvider } from 'react-i18next';
 import i18n, { initializeLanguage } from './src/utils/i18n';
 import { useSyncLanguage } from './src/hooks/useLanguage';
+import ToastManager from './src/components/ToastManager';
 
 // Configuration complète des polices pour React Native Paper
 const fontConfig = {
@@ -129,6 +130,7 @@ const AppContent = () => {
     <View style={styles.container}>
       <StatusBar style="dark" />
       <AppNavigator />
+      <ToastManager />
     </View>
   );
 };

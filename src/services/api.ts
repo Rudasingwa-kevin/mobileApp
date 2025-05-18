@@ -1,3 +1,17 @@
+/**
+ * DEPRECATED: Ce fichier contient des données mockées et sera remplacé par les services API réels.
+ * 
+ * Pour les nouveaux développements, veuillez utiliser les services dans le dossier api/ :
+ * - auth.service.ts pour l'authentification
+ * - property.service.ts pour les propriétés
+ * - user.service.ts pour les utilisateurs
+ * - message.service.ts pour les messages
+ * - review.service.ts pour les avis
+ * 
+ * Cette implémentation mockée sera conservée temporairement à des fins de référence
+ * pendant la migration vers l'API réelle.
+ */
+
 import { Property, User } from '../types';
 
 // Données mockées
